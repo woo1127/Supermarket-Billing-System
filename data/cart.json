@@ -1,0 +1,35 @@
+{
+    "users": [
+        {
+            "userid": "jeremy",
+            "cart": [
+                {
+                    "id": 1,
+                    "productName": "Rendang Ayam",
+                    "quantity": 2,
+                    "productPrice": 8.7,
+                    "amount": 17.4
+                },
+                {
+                    "id": 2,
+                    "productName": "LadyFinger",
+                    "quantity": 34,
+                    "productPrice": 0.5,
+                    "amount": 17.0
+                }
+            ]
+        },
+        {
+            "userid": "jerry",
+            "cart": [
+                {
+                    "id": 3,
+                    "productName": "Kumah Kari",
+                    "quantity": 1,
+                    "productPrice": 4.3,
+                    "amount": 4.3
+                }
+            ]
+        }
+    ]
+}
