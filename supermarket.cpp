@@ -78,6 +78,13 @@ void lineDivider(char);
 void margin();
 void countSpaceBetween(int, int, int*, int*, int);
 
+
+/** 
+ * @brief  Display the text in the center of the interface
+ * @param  text   The text used to display on center
+ * @param  color  The text and background color of the centered text
+ * @param  width  The width of the interface
+ */
 template <typename T>
 void printCenter(string text, T (*color)(string), int width = WIDTH + 1) {
     int front = width / 2.0 + ceil(text.length() / 2.0);
@@ -87,10 +94,18 @@ void printCenter(string text, T (*color)(string), int width = WIDTH + 1) {
     cout << setw(front) << right << color(text) << setw(static_cast<int>(width - front)) << color(" ") << '\n';
 }
 
+/**
+ * @brief  Provide a specify left margin for the interface
+ *         so it will not stick on the left side of console
+ */
 void margin() {
     cout << string(30, ' ');
 }
 
+/**
+ * @brief  Display a separate line based on the width of interface
+ * @param  symbol  The symbol or character used to draw the line
+ */
 void lineDivider(char symbol = '=') {
     cout << string(WIDTH + 1, symbol) << '\n';
 }
@@ -428,17 +443,32 @@ void accountPage() {
     }
 }
 
-void countSpaceBetween(int usedSpace, int interval, int* averageSpace, int* lastSpace, int width = WIDTH) {
-    int totalSpace = width - usedSpace - 2;
-    int avgSpace = totalSpace / interval;
 
-    int leftSpace = totalSpace - avgSpace * interval;
+/**
+ * @brief  Count the blank space that should be used as the 
+ *         padding between columns
+ * @param  usedSpace  The space that have been filled with characters
+ * @param  intervals  The number of intervals
+ * @param  averageSpace  The average blank space between each columns
+ * @param  lastSpace  The blank space of last column
+ * @param  width  The width of our program measured by number of characters
+ */
+void countSpaceBetween(int usedSpace, int intervals, int* averageSpace, int* lastSpace, int width = WIDTH) {
+    int totalSpace = width - usedSpace - 2;
+    int avgSpace = totalSpace / intervals;
+
+    int leftSpace = totalSpace - avgSpace * intervals;
     int finalSpace = avgSpace + leftSpace + 1;
 
     *averageSpace = avgSpace;
     *lastSpace = finalSpace;
 }
 
+/**
+ * @brief  The interface of cart page.
+ *         User is allow to view and decide whether to
+ *         remove product from cart or proceed to checkout.
+ */
 void cartPage() {
     char option; 
     double totalPrice;
@@ -486,6 +516,7 @@ void cartPage() {
     Document doc = readJsonFile(CART_FILE_PATH);
     Document::AllocatorType & allocator = doc.GetAllocator();
     
+    // Get the value of "users" key
     Value & users = doc["users"];
     int userPosition = jsonFindUserPosition(users, allocator);
 
@@ -493,9 +524,11 @@ void cartPage() {
         userPosition = jsonCreateNewUser(users, allocator);
     }
 
+    // Get the value of "cart" key
     Value & cart = users[userPosition]["cart"];
 
-    for (auto & p: cart.GetArray()) {
+    // loop and display the products from cart array
+    for (const auto & p: cart.GetArray()) {
         margin(); cout << "|";
 
         cout << string(averageSpace, ' ') << setw(3)  << left  << p["id"].GetInt();
@@ -531,8 +564,10 @@ void cartPage() {
         mainPage();
     }
     else if (charToInt(option) > 0 && charToInt(option) < cart.Size()) {
+        // remove selected product from cart
         cart.Erase(cart.Begin() + charToInt(option) - 1);
 
+        // reorder the id of each product in cart numerically
         for (SizeType i = 0; i < cart.Size(); i++) {
             cart[i]["id"] = i + 1;
         }
@@ -547,6 +582,13 @@ void cartPage() {
     }
 }
 
+/**
+ * @brief  The interface of product page, the page will display 
+ *         different category of products based on the given filepath.
+ *         User can add product to cart by input option
+ * @param  filepath  The path of the file that store the data 
+ *                   of particular category
+ */
 void productPage(string filepath) {
     char option;
     string line, word;
@@ -650,7 +692,8 @@ void productPage(string filepath) {
         Value productName(selectedProduct.productName.c_str(), allocator);
 
         int userPosition = jsonFindUserPosition(users, allocator);
-
+        
+        // if user info not found in json, then create a new user in json
         if (userPosition == -1) {
             userPosition = jsonCreateNewUser(users, allocator);
         }
@@ -658,12 +701,14 @@ void productPage(string filepath) {
         Value & cart = users[userPosition]["cart"];
         Value newProduct(kObjectType);
 
+        // add the information of selected product in a key value pair
         newProduct.AddMember("id", cart.Size() + 1, allocator);
         newProduct.AddMember("productName", productName, allocator);
         newProduct.AddMember("quantity", productQty, allocator);
         newProduct.AddMember("productPrice", selectedProduct.productPrice, allocator);
         newProduct.AddMember("amount", selectedProduct.productPrice * productQty, allocator);
 
+        // append the product details into the cart array of logged user
         cart.PushBack(newProduct, allocator);
 
         writeJsonFile(doc, CART_FILE_PATH);
@@ -696,6 +741,11 @@ void paymentPage() {
     
 }
 
+/**
+ * @brief  Read a json file and parse it into a DOM(document object model)
+ * @param  readPath  The location of a json file
+ * @return  The DOM of a json object
+ */ 
 Document readJsonFile(string readPath) {
     fstream file(readPath, ios::in);
     IStreamWrapper isw(file);
@@ -706,6 +756,11 @@ Document readJsonFile(string readPath) {
     return doc;
 }
 
+/**
+ * @brief  Write and save a json file
+ * @param  doc  The DOM of a json object
+ * @param  savePath  The save location of a json file
+ */
 void writeJsonFile(Document& doc, string savePath) {
     fstream file(savePath, ios::out);
     OStreamWrapper osw(file);
@@ -714,18 +769,32 @@ void writeJsonFile(Document& doc, string savePath) {
     doc.Accept(writer);
 }
 
+/** 
+ * @brief  Find and return the position of logged user in json file
+ * @param  users  The "users" array in json file
+ * @param  allocator  The allocator of DOM
+ */
 int jsonFindUserPosition(Value & users, Document::AllocatorType & allocator) {
     int position = -1;
-
+    
+    // loop and check if the value of "userid" key match with the value of userid in
+    // loginInfo structure
     for (SizeType i = 0; i < users.Size(); i++) {
         if (users[i]["userid"].GetString() == loginInfo.userid) {
             position = i;
         } 
     }
 
+    // return -1 if user not found
     return (position != -1) ? position : -1;
 }
 
+/**
+ * @brief  Create and append the info of new user into the json file
+ * @param  users  The "users" array in json file
+ * @param  allocator  The allocator of DOM
+ * @return  The position of the new user in json file
+ */
 int jsonCreateNewUser(Value & users, Document::AllocatorType & allocator) {
     int position = 0;
 
@@ -743,5 +812,6 @@ int jsonCreateNewUser(Value & users, Document::AllocatorType & allocator) {
 }
 
 int charToInt(char num) {
+    // if '0' == 48 in ascii, minus 48 will get 0 that become the integer of '0'
     return static_cast<int>(num) - 48;
 }
