@@ -7,6 +7,8 @@
 #include <sstream>
 #include <vector>
 #include <iomanip>
+#include <ctime>
+#include <conio.h>
 #include "libraries/rapidjson/document.h"
 #include "libraries/rapidjson/ostreamwrapper.h"
 #include "libraries/rapidjson/istreamwrapper.h"
@@ -36,6 +38,10 @@ template<typename T>
 const auto func4 = dye::bright_white_on_green<T>;
 const auto bg_green = func4<string>;
 
+template<typename T>
+const auto func5 = dye::vanilla<T>;
+const auto bg_default = func5<string>;
+
 struct ProductInfo {
     int productId;
     string productName;
@@ -43,17 +49,9 @@ struct ProductInfo {
     double productPrice;
 };
 
-struct CartProductInfo {
-    int id;
-    string productName;
-    int quantity;
-    double productPrice;
-    double amount;
-};
-
 struct LoginInfo {
-    string userIndex;
     string userid;
+    string username;
     string password;
 } loginInfo;
 
@@ -67,11 +65,12 @@ void accountPage();
 void cartPage();
 void productPage(string);
 void paymentPage();
+void receiptPage();
 
 // ********** Helper function **********
 Document readJsonFile(string);
 void writeJsonFile(Document &, string);
-int jsonFindUserPosition(Value &, Document::AllocatorType &);
+int jsonFindUserPosition(Value &);
 int jsonCreateNewUser(Value &, Document::AllocatorType &);
 int charToInt(char);
 void lineDivider(char);
@@ -86,12 +85,21 @@ void countSpaceBetween(int, int, int*, int*, int);
  * @param  width  The width of the interface
  */
 template <typename T>
-void printCenter(string text, T (*color)(string), int width = WIDTH + 1) {
-    int front = width / 2.0 + ceil(text.length() / 2.0);
-    int back = width - front;
+void printCenter(string text, T (*color)(string), bool border = false, int width = WIDTH + 1) {
+    int front = 0;
+    int back = 0;
 
     margin();
-    cout << setw(front) << right << color(text) << setw(static_cast<int>(width - front)) << color(" ") << '\n';
+
+    if (border) {
+        front = (width - 2) / 2.0 + ceil(text.length() / 2.0);
+        back = width - front;
+        cout << '|' << setw(front) << right << color(text) << setw(back - 2) << color(" ") << "|\n";
+    } else {
+        front = width / 2.0 + ceil(text.length() / 2.0);
+        back = width - front;
+        cout << setw(front) << right << color(text) << setw(back) << color(" ") << '\n';
+    }
 }
 
 /**
@@ -106,7 +114,8 @@ void margin() {
  * @brief  Display a separate line based on the width of interface
  * @param  symbol  The symbol or character used to draw the line
  */
-void lineDivider(char symbol = '=') {
+void lineDivider(char symbol) {
+    margin();
     cout << string(WIDTH + 1, symbol) << '\n';
 }
 
@@ -120,15 +129,21 @@ void welcomePage() {
     int option = 0;
 
     cout << '\n';
-    margin(); lineDivider();
+    lineDivider('=');
     printCenter("Welcome to Tesco Supermarket", bg_blue);
-    margin(); lineDivider();
-    margin(); cout << setw(WIDTH) << left << "|" << "|\n";
-    margin(); cout << setw(WIDTH) << left << "|     1. Login"  << "|\n";
-    margin(); cout << setw(WIDTH) << left << "|     2. Signup" << "|\n";
-    margin(); cout << setw(WIDTH) << left << "|" << "|\n";
-    margin(); lineDivider(); cout << '\n';
-    margin(); cout << "   Enter your choice: ";
+    lineDivider('=');
+    margin(); 
+    cout << setw(WIDTH) << left << "|" << "|\n";
+    margin(); 
+    cout << setw(WIDTH) << left << "|     1. Login"  << "|\n";
+    margin(); 
+    cout << setw(WIDTH) << left << "|     2. Signup" << "|\n";
+    margin(); 
+    cout << setw(WIDTH) << left << "|" << "|\n";
+    lineDivider('='); 
+    cout << '\n';
+    margin(); 
+    cout << "   Enter your choice: ";
     cin  >> option;
     
     system("cls");
@@ -148,21 +163,24 @@ void welcomePage() {
 }
 
 void loginPage() {
-    string storeUserIndex;
     string storeUserid;
+    string storeUsername;
     string storePassword;
-    string userid;
+    string username;
     string password;
     string line, word;
 
     cout << '\n';
-    margin(); lineDivider();
+    lineDivider('=');
     printCenter("Login Page", bg_blue);
-    margin(); lineDivider(); cout << '\n';
-    margin(); cout << "     Userid   : ";
-    cin >> userid;
-    margin(); cout << "     Password : ";
-    cin >> password;
+    lineDivider('='); 
+    cout << '\n';
+    margin(); 
+    cout << "     Username : ";
+    cin  >> username;
+    margin(); 
+    cout << "     Password : ";
+    cin  >> password;
 
     fstream file(CREDENTIALS_FILE_PATH, ios::in);
 
@@ -172,13 +190,13 @@ void loginPage() {
         while (getline(file, line)) {
             stringstream str(line);
 
-            getline(str, storeUserIndex, ',');
             getline(str, storeUserid, ',');
+            getline(str, storeUsername, ',');
             getline(str, storePassword, ',');
 
-            if (storeUserid == userid && storePassword == password) {
-                loginInfo.userIndex = storeUserIndex;
+            if (storeUsername == username && storePassword == password) {
                 loginInfo.userid = storeUserid;
+                loginInfo.username = storeUsername;
                 loginInfo.password = storePassword;
 
                 system("cls");
@@ -196,19 +214,22 @@ void loginPage() {
 
 void signupPage() {
     int numOfLine = 0;
-    string newUserIndex;
-    string line;
     string newUserid;
+    string newUsername;
     string newPassword;
+    string line;
 
     cout << '\n';
-    margin(); lineDivider();
+    lineDivider('=');
     printCenter("Signup Page", bg_blue);
-    margin(); lineDivider(); cout << '\n';
-    margin(); cout << "     New userid   : ";
-    cin >> newUserid;
-    margin(); cout << "     New password : ";
-    cin >> newPassword;
+    lineDivider('='); 
+    cout << '\n';
+    margin(); 
+    cout << "     New username : ";
+    cin  >> newUsername;
+    margin(); 
+    cout << "     New password : ";
+    cin  >> newPassword;
 
     fstream file(CREDENTIALS_FILE_PATH, ios::in);
 
@@ -220,16 +241,16 @@ void signupPage() {
     }
 
     fstream file2(CREDENTIALS_FILE_PATH, ios::app);
-    newUserIndex = to_string(numOfLine);
+    newUserid = to_string(numOfLine);
 
     file2 << "\n" 
-          << newUserIndex << ','
           << newUserid << ','
+          << newUsername << ','
           << newPassword;
     file2.close();
 
-    loginInfo.userIndex = newUserIndex;
     loginInfo.userid = newUserid;
+    loginInfo.username = newUsername;
     loginInfo.password = newPassword;
 
     system("cls");
@@ -256,17 +277,25 @@ void mainPage() {
     */
 
     cout << '\n';
-    margin(); lineDivider();
+    lineDivider('=');
     printCenter("Main Page", bg_blue);
-    margin(); lineDivider();
-    margin(); cout << setw(WIDTH) << left << "|" << "|\n";
-    margin(); cout << setw(WIDTH) << left << "|     1. Menu"    << "|\n";
-    margin(); cout << setw(WIDTH) << left << "|     2. Account" << "|\n";
-    margin(); cout << setw(WIDTH) << left << "|     3. Cart"    << "|\n";
-    margin(); cout << setw(WIDTH) << left << "|     4. Logout"  << "|\n";
-    margin(); cout << setw(WIDTH) << left << "|" << "|\n";
-    margin(); lineDivider(); cout << '\n';
-    margin(); cout << "   Enter your choice: ";
+    lineDivider('=');
+    margin(); 
+    cout << setw(WIDTH) << left << "|" << "|\n";
+    margin(); 
+    cout << setw(WIDTH) << left << "|     1. Menu"    << "|\n";
+    margin(); 
+    cout << setw(WIDTH) << left << "|     2. Account" << "|\n";
+    margin(); 
+    cout << setw(WIDTH) << left << "|     3. Cart"    << "|\n";
+    margin(); 
+    cout << setw(WIDTH) << left << "|     4. Logout"  << "|\n";
+    margin(); 
+    cout << setw(WIDTH) << left << "|" << "|\n";
+    lineDivider('='); 
+    cout << '\n';
+    margin(); 
+    cout << "   Enter your choice: ";
     cin  >> option;
 
     system("cls");
@@ -279,7 +308,7 @@ void mainPage() {
             accountPage(); 
             break;
         case 3: 
-            cartPage(); 
+            cartPage();
             break;
         case 4: 
             welcomePage(); 
@@ -313,20 +342,30 @@ void menuPage() {
     */
 
     cout << '\n';
-    margin(); lineDivider();
+    lineDivider('=');
     printCenter("Menu Page", bg_blue);
-    margin(); lineDivider();
-    margin(); cout << setw(WIDTH) << left << "|" << "|\n";
-    margin(); cout << setw(WIDTH) << left << "|   Categories:"      << "|\n";
-    margin(); cout << setw(WIDTH) << left << "|     1. Canned Food" << "|\n";
-    margin(); cout << setw(WIDTH) << left << "|     2. Vegetables"  << "|\n";
-    margin(); cout << setw(WIDTH) << left << "|     3. Fruits"      << "|\n";
-    margin(); cout << setw(WIDTH) << left << "|" << "|\n";
-    margin(); lineDivider('-');
-    margin(); cout << setw(WIDTH) << left << "|   Press (b): Back to previos page" << "|\n";
-    margin(); cout << setw(WIDTH) << left << "|   Press (p): Proceed to checkout"  << "|\n";
-    margin(); lineDivider(); cout << '\n';
-    margin(); cout << "   Enter your choice: ";
+    lineDivider('=');
+    margin(); 
+    cout << setw(WIDTH) << left << "|" << "|\n";
+    margin(); 
+    cout << setw(WIDTH) << left << "|   Categories:"      << "|\n";
+    margin(); 
+    cout << setw(WIDTH) << left << "|     1. Canned Food" << "|\n";
+    margin(); 
+    cout << setw(WIDTH) << left << "|     2. Vegetables"  << "|\n";
+    margin(); 
+    cout << setw(WIDTH) << left << "|     3. Fruits"      << "|\n";
+    margin(); 
+    cout << setw(WIDTH) << left << "|" << "|\n";
+    lineDivider('-');
+    margin(); 
+    cout << setw(WIDTH) << left << "|   Press (b): Back to previos page" << "|\n";
+    margin(); 
+    cout << setw(WIDTH) << left << "|   Press (p): Proceed to checkout"  << "|\n";
+    lineDivider('='); 
+    cout << '\n';
+    margin(); 
+    cout << "   Enter your choice: ";
     cin  >> option;
 
     system("cls");
@@ -354,48 +393,58 @@ void menuPage() {
 }
 
 void accountPage() {
-    int option = 0;
+    char option;
     string line, word;
     string newUserid;
     string newPassword;
-    vector<string> tempCredentials;
+    string tempCredentials = "";
 
     /*
     ======================================
                  Account Page             
     ======================================
 
-       Userid   : loginInfo.userid
-       Password : loginInfo.password 
+         Userid   : loginInfo.userid
+         Password : loginInfo.password 
 
     --------------------------------------
-       1. Change account info             
-       2. Back to previous page           
+       Press (b): Back to previous page
+       Press (p): Change account info
     ======================================
 
        Enter your choices:
     */
 
     cout << '\n';
-    margin(); lineDivider();
+    lineDivider('=');
     printCenter("Account Page", bg_blue);
-    margin(); lineDivider();
-    margin(); cout << setw(WIDTH) << left << "|" << "|\n";
-    margin(); cout << setw(17) << "|     Userid   : " << setw(WIDTH - 17) << loginInfo.userid   << "|\n";
-    margin(); cout << setw(17) << "|     Password : " << setw(WIDTH - 17) << loginInfo.password << "|\n";
-    margin(); cout << setw(WIDTH) << left << "|" << "|\n";
-    margin(); lineDivider('-');
-    margin(); cout << setw(WIDTH) << left << "|     1. Change account info"   << "|\n";
-    margin(); cout << setw(WIDTH) << left << "|     2. Back to previous page" << "|\n";
-    margin(); lineDivider(); cout << '\n';
-    margin(); cout << "   Enter your choice: ";
+    lineDivider('=');
+    margin(); 
+    cout << setw(WIDTH) << left << "|" << "|\n";
+    margin(); 
+    cout << setw(17) << "|     Userid   : " << setw(WIDTH - 17) << loginInfo.username << "|\n";
+    margin(); 
+    cout << setw(17) << "|     Password : " << setw(WIDTH - 17) << loginInfo.password << "|\n";
+    margin(); 
+    cout << setw(WIDTH) << left << "|" << "|\n";
+    lineDivider('-');
+    margin(); 
+    cout << setw(WIDTH) << left << "|     Press (p): Change account info"   << "|\n";
+    margin(); 
+    cout << setw(WIDTH) << left << "|     Press (b): Back to previous page" << "|\n";
+    lineDivider('='); 
+    cout << '\n';
+    margin(); 
+    cout << "   Enter your choice: ";
     cin  >> option;
 
     fstream fileIn(CREDENTIALS_FILE_PATH, ios::in);
-
-    if (option == 1) {
+        
+    if (option == 'p') {
+        margin();
         cout << "   Enter new userid   : ";
         cin >> newUserid;
+        margin();
         cout << "   Enter new password : ";
         cin >> newPassword;
 
@@ -403,36 +452,31 @@ void accountPage() {
             stringstream str(line);
             getline(str, word, ',');
 
-            if (word == loginInfo.userIndex) {                    
-                tempCredentials.push_back(loginInfo.userIndex + ',' + 
-                                            newUserid + ',' + 
-                                            newPassword);
+            if (word != loginInfo.userid) {
+                tempCredentials += line + '\n';
+            }
+            else if (word == loginInfo.userid) {
+                tempCredentials += loginInfo.userid + ',' + newUserid + ',' + newPassword + '\n';
+
                 loginInfo.userid = newUserid;
                 loginInfo.password = newPassword;
-            } 
-            else {
-                tempCredentials.push_back(line);
             }
 
-            for (size_t i = 0; i < 2; i++) {
+            for (size_t i = 0; i < 2; i++) 
                 getline(str, word, ',');
-            }
-            fileIn.close();
         }
+
+        fileIn.close();
 
         fstream fileOut(CREDENTIALS_FILE_PATH, ios::out);
-
-        for (auto v: tempCredentials) {
-            fileOut << v << '\n';
-        }
-
-        tempCredentials.clear();
+        fileOut << tempCredentials;
         fileOut.close();
+
         system("cls");
         printCenter("Account info changed successfully", bg_green);
         accountPage();
     } 
-    else if (option == 2) {
+    else if (option == 'b') {
         system("cls");
         mainPage();
     } 
@@ -442,7 +486,6 @@ void accountPage() {
         accountPage();
     }
 }
-
 
 /**
  * @brief  Count the blank space that should be used as the 
@@ -471,7 +514,7 @@ void countSpaceBetween(int usedSpace, int intervals, int* averageSpace, int* las
  */
 void cartPage() {
     char option; 
-    double totalPrice;
+    double totalPrice = 0.0;
     int averageSpace = 0;
     int lastSpace = 0;
     int usedSpace = 39;
@@ -500,25 +543,27 @@ void cartPage() {
     */
 
    cout << '\n';
-   margin(); lineDivider();
+   lineDivider('=');
    printCenter("Cart Page", bg_blue);
-   margin(); lineDivider();
-   margin(); cout << "|" 
-                   << string(averageSpace, ' ') << setw(3)  << left  << "No."
-                   << string(averageSpace, ' ') << setw(20) << left  << "Item"
-                   << string(averageSpace, ' ') << setw(4)  << right << "Qty"
-                   << string(averageSpace, ' ') << setw(6)  << right << "Price"
-                   << string(averageSpace, ' ') << setw(6)  << right << "Amount"
-                   << string(lastSpace, ' ')    << "|\n";
-    margin(); lineDivider('-');
-    margin(); cout << setw(WIDTH) << left << "|" << "|\n";
+   lineDivider('=');
+   margin(); 
+   cout << "|" 
+        << string(averageSpace, ' ') << setw(3)  << left  << "No."
+        << string(averageSpace, ' ') << setw(20) << left  << "Item"
+        << string(averageSpace, ' ') << setw(4)  << right << "Qty"
+        << string(averageSpace, ' ') << setw(6)  << right << "Price"
+        << string(averageSpace, ' ') << setw(6)  << right << "Amount"
+        << string(lastSpace, ' ')    << "|\n";
+    lineDivider('-');
+    margin(); 
+    cout << setw(WIDTH) << left << "|" << "|\n";
 
     Document doc = readJsonFile(CART_FILE_PATH);
     Document::AllocatorType & allocator = doc.GetAllocator();
     
     // Get the value of "users" key
     Value & users = doc["users"];
-    int userPosition = jsonFindUserPosition(users, allocator);
+    int userPosition = jsonFindUserPosition(users);
 
     if (userPosition == -1) {
         userPosition = jsonCreateNewUser(users, allocator);
@@ -529,7 +574,8 @@ void cartPage() {
 
     // loop and display the products from cart array
     for (const auto & p: cart.GetArray()) {
-        margin(); cout << "|";
+        margin(); 
+        cout << "|";
 
         cout << string(averageSpace, ' ') << setw(3)  << left  << p["id"].GetInt();
         cout << string(averageSpace, ' ') << setw(20) << left  << p["productName"].GetString();
@@ -543,17 +589,23 @@ void cartPage() {
         totalPrice += p["amount"].GetDouble();
     }
 
-    margin(); cout << setw(WIDTH) << left << "|" << "|\n";
-    margin(); lineDivider('-');
-    margin(); cout << setw(16) << left << "|   Total Amount"
-                   << setw(WIDTH - 16 - lastSpace) << right << totalPrice
-                   << string(lastSpace, ' ') << "|\n";
-    margin(); lineDivider('-');
-    margin(); cout << setw(WIDTH) << left << "|   Press (p): Proceed to checkout"   << "|\n";
-    margin(); cout << setw(WIDTH) << left << "|   Press (b): Back to previous page" << "|\n";
-    margin(); lineDivider(); cout << '\n';
-    margin(); cout << "   Enter your choice: ";
-    cin >> option;
+    margin(); 
+    cout << setw(WIDTH) << left << "|" << "|\n";
+    lineDivider('-');
+    margin(); 
+    cout << setw(16) << left << "|   Total Amount"
+         << setw(WIDTH - 16 - lastSpace) << right << totalPrice
+         << string(lastSpace, ' ') << "|\n";
+    lineDivider('-');
+    margin(); 
+    cout << setw(WIDTH) << left << "|   Press (p): Proceed to checkout"   << "|\n";
+    margin(); 
+    cout << setw(WIDTH) << left << "|   Press (b): Back to previous page" << "|\n";
+    lineDivider('='); 
+    cout << '\n';
+    margin(); 
+    cout << "   Enter your choice: ";
+    cin  >> option;
 
     system("cls");
 
@@ -563,7 +615,7 @@ void cartPage() {
     else if (option == 'b') {
         mainPage();
     }
-    else if (charToInt(option) > 0 && charToInt(option) < cart.Size()) {
+    else if (charToInt(option) > 0 && charToInt(option) <= cart.Size()) {
         // remove selected product from cart
         cart.Erase(cart.Begin() + charToInt(option) - 1);
 
@@ -624,17 +676,19 @@ void productPage(string filepath) {
     */
 
     cout << '\n';
-    margin(); lineDivider();
+    lineDivider('=');
     printCenter("Product Page", bg_blue);
-    margin(); lineDivider();
-    margin(); cout << "|" 
-                   << string(averageSpace, ' ') << setw(3)  << left  << "No."
-                   << string(averageSpace, ' ') << setw(20) << left  << "Item"
-                   << string(averageSpace, ' ') << setw(4)  << right << "Qty"
-                   << string(averageSpace, ' ') << setw(6)  << right << "Price"
-                   << string(lastSpace, ' ')    << "|\n";
-    margin(); lineDivider('-');
-    margin(); cout << setw(WIDTH) << left << "|" << "|\n";
+    lineDivider('=');
+    margin(); 
+    cout << "|" 
+         << string(averageSpace, ' ') << setw(3)  << left  << "No."
+         << string(averageSpace, ' ') << setw(20) << left  << "Item"
+         << string(averageSpace, ' ') << setw(4)  << right << "Qty"
+         << string(averageSpace, ' ') << setw(6)  << right << "Price"
+         << string(lastSpace, ' ')    << "|\n";
+    lineDivider('-');
+    margin(); 
+    cout << setw(WIDTH) << left << "|" << "|\n";
 
     if (file.is_open()) {
         while (getline(file, line)) {
@@ -665,11 +719,15 @@ void productPage(string filepath) {
         file.close();
     }
 
-    margin(); cout << setw(WIDTH) << left << "|" << "|\n";
-    margin(); lineDivider('-');
-    margin(); cout << setw(WIDTH) << left << "|   Press (b): Back to previous page" << "|\n";
-    margin(); lineDivider(); cout << '\n';
-    margin(); cout << "   Enter your choice: ";
+    margin(); 
+    cout << setw(WIDTH) << left << "|" << "|\n";
+    lineDivider('-');
+    margin(); 
+    cout << setw(WIDTH) << left << "|   Press (b): Back to previous page" << "|\n";
+    lineDivider('='); 
+    cout << '\n';
+    margin(); 
+    cout << "   Enter your choice: ";
     cin  >> option;
 
     if (option == 'b') {
@@ -679,6 +737,7 @@ void productPage(string filepath) {
     else  {
         productId = charToInt(option);
 
+        margin();
         cout << "   Enter the quantity: ";
         cin >> productQty;
         cout << "\n";
@@ -691,7 +750,7 @@ void productPage(string filepath) {
         Value & users = doc["users"];
         Value productName(selectedProduct.productName.c_str(), allocator);
 
-        int userPosition = jsonFindUserPosition(users, allocator);
+        int userPosition = jsonFindUserPosition(users);
         
         // if user info not found in json, then create a new user in json
         if (userPosition == -1) {
@@ -714,8 +773,9 @@ void productPage(string filepath) {
         writeJsonFile(doc, CART_FILE_PATH);
     }
 
+    margin();
     cout << "   Item has been added to cart? Continue to add? [y/n]: ";
-    cin >> option;
+    cin  >> option;
 
     if (option == 'y') {
         system("cls");
@@ -726,19 +786,165 @@ void productPage(string filepath) {
         menuPage();
     } 
     else {
+        margin();
         cout << "   Invalid option" << "\n\n";
+        margin();
         cout << "   Item has been added to cart? Continue to add? [y/n]: ";
     }
 }
 
 void paymentPage() {
-    int option = 0;
+    char option;
 
-    cout << "--------------------------------------" << "\n";
-    cout << "             Payment Page             " << "\n";
-    cout << "--------------------------------------" << "\n\n";
-    cin >> option;
+    /*  
+    ======================================
+                Payment Page              
+    ======================================
+
+       Choose payment method:
+         1. Credit Card
+         2. Online Banking
+       
+    ======================================
     
+       Enter your choice:
+    */
+
+    cout << '\n';
+    lineDivider('=');
+    printCenter("Payment Page", bg_blue);
+    lineDivider('=');
+    margin(); 
+    cout << setw(WIDTH) << left << "|" << "|\n";
+    margin(); 
+    cout << setw(WIDTH) << left << "|     1. Credit Card"    << "|\n";
+    margin(); 
+    cout << setw(WIDTH) << left << "|     2. Online Banking" << "|\n";
+    margin(); 
+    cout << setw(WIDTH) << left << "|" << "|\n";
+    lineDivider('-');
+    margin(); 
+    cout << setw(WIDTH) << left << "|   Press (b): Back to main page" << "|\n";
+    lineDivider('='); 
+    cout << '\n';
+    margin(); 
+    cout << "   Enter your choice: ";
+    cin  >> option;
+
+    system("cls");
+
+    if (option == '1' || option == '2') {
+        printCenter("Payment Successful", bg_green);
+        receiptPage();
+    }
+    else if (option = 'b') 
+        mainPage();
+    else {
+        printCenter("Invalid option", bg_red);
+        paymentPage();
+    }
+}
+
+void receiptPage() {
+    double totalPrice = 0.0;
+    int averageSpace = 0;
+    int lastSpace = 0;
+    int usedSpace = 30;
+    int intervals = 4;
+    char datetime1[50];
+    string datetime2;
+
+    // get the currect date and time
+    time_t t = time(0);
+    // format the date and time into specify format, in this case 
+    // is dd/mm/yyyy and time in 12-hour clock
+    strftime(datetime1, 50, "%d / %m / %Y   %I:%M %p", localtime(&t));
+    // convert char array to string
+    datetime2 = datetime1;
+
+    countSpaceBetween(usedSpace, intervals, &averageSpace, &lastSpace);
+
+    /* 
+    ======================================
+                  Receipt
+    ======================================
+                   TESCO
+               TEL: 043456789
+    --------------------------------------
+       Qty   Item                 Amount
+    --------------------------------------
+
+        3    Food one             20.20      
+        1    Food two              4.50
+
+    --------------------------------------
+       Total:                      24.60
+    --------------------------------------
+                THANK YOU!
+
+            11/2/2023 08:22 pm
+    ======================================
+    */
+
+    cout << '\n';
+    lineDivider('=');
+    printCenter("Receipt", bg_blue);
+    lineDivider('=');
+    printCenter("Tesco", bg_default, true);
+    printCenter("TEL: 043456789", bg_default, true);
+    lineDivider('-');
+    margin(); 
+    cout << "|" 
+         << string(averageSpace, ' ') << setw(4)  << right << "Qty"
+         << string(averageSpace, ' ') << setw(20) << left  << "Item"
+         << string(averageSpace, ' ') << setw(6)  << right << "Amount"
+         << string(lastSpace, ' ')    << "|\n";
+    lineDivider('-');
+    margin(); 
+    cout << setw(WIDTH) << left << "|" << "|\n";
+
+    Document doc = readJsonFile(CART_FILE_PATH);
+    
+    Value & users = doc["users"];
+    int userPosition = jsonFindUserPosition(users);
+    Value & cart = users[userPosition]["cart"];
+
+    for (const auto & p: cart.GetArray()) {
+        margin(); 
+        cout << "|";
+
+        cout << string(averageSpace, ' ') << setw(4)  << right << p["quantity"].GetInt();
+        cout << string(averageSpace, ' ') << setw(20) << left  << p["productName"].GetString();                                  
+        cout << string(averageSpace, ' ') << setw(6)  << right << fixed 
+                                          << setprecision(2) << p["amount"].GetDouble();
+        cout << string(lastSpace, ' ')    << "|\n";
+
+        totalPrice += p["amount"].GetDouble();
+    }
+
+    margin(); 
+    cout << setw(WIDTH) << left << "|" << "|\n";
+    lineDivider('-');
+    margin();
+    cout << setw(16) << left << "|   Total Amount"
+         << setw(WIDTH - 16 - lastSpace) << right << totalPrice
+         << string(lastSpace, ' ') << "|\n";
+    lineDivider('-');
+    printCenter("THANK YOU!", bg_default, true);
+    margin();
+    cout << setw(WIDTH) << left << "|" << "|\n";
+    printCenter(datetime2, bg_default, true);
+    lineDivider('=');
+    cout << '\n';
+    margin();
+    cout << "   Press any key to back to main page: ";
+    getch();
+
+    cart.Erase(cart.Begin(), cart.Begin() + cart.Size());
+    writeJsonFile(doc, CART_FILE_PATH);
+   
+    system("cls");
+    mainPage();
 }
 
 /**
@@ -774,13 +980,13 @@ void writeJsonFile(Document& doc, string savePath) {
  * @param  users  The "users" array in json file
  * @param  allocator  The allocator of DOM
  */
-int jsonFindUserPosition(Value & users, Document::AllocatorType & allocator) {
+int jsonFindUserPosition(Value & users) {
     int position = -1;
     
     // loop and check if the value of "userid" key match with the value of userid in
     // loginInfo structure
     for (SizeType i = 0; i < users.Size(); i++) {
-        if (users[i]["userid"].GetString() == loginInfo.userid) {
+        if (users[i]["username"].GetString() == loginInfo.username) {
             position = i;
         } 
     }
@@ -800,9 +1006,9 @@ int jsonCreateNewUser(Value & users, Document::AllocatorType & allocator) {
 
     Value newCart(kArrayType);
     Value newUsersObject(kObjectType);
-    Value userid(loginInfo.userid.c_str(), allocator) ;
+    Value username(loginInfo.username.c_str(), allocator) ;
 
-    newUsersObject.AddMember("userid", userid, allocator);
+    newUsersObject.AddMember("username", username, allocator);
     newUsersObject.AddMember("cart", newCart, allocator);
 
     position = users.Size();
