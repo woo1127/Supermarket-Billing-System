@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstdio>
+#include <stdlib.h>
 #include <cmath>
 #include <string>
 #include <cstring>
@@ -147,7 +148,7 @@ void welcomePage() {
     cout << "   Enter your choice: ";
     cin  >> option;
     
-    system("cls");
+    system("cls||clear");
 
     switch (option) {
         case 1: 
@@ -198,7 +199,7 @@ void loginPage() {
             if (storeUsername == username && storePassword == password) {
                 loginInfo = {storeUserid, storeUsername, storePassword};
 
-                system("cls");
+                system("cls||clear");
                 printCenter("Login Successfully!", bg_green);
                 mainPage();
             }
@@ -206,7 +207,7 @@ void loginPage() {
         file.close();
     }
 
-    system("cls");
+    system("cls||clear");
     printCenter("Invalid userid or password, please try again.", bg_red);
     welcomePage();
 }
@@ -254,7 +255,7 @@ void signupPage() {
 
     loginInfo = {newUserid, newUsername, newPassword};
 
-    system("cls");
+    system("cls||clear");
     printCenter("Account set up successfully", bg_green);
     mainPage();
 }
@@ -299,7 +300,7 @@ void mainPage() {
     cout << "   Enter your choice: ";
     cin  >> option;
 
-    system("cls");
+    system("cls||clear");
 
     switch (option) {
         case 1: 
@@ -369,7 +370,7 @@ void menuPage() {
     cout << "   Enter your choice: ";
     cin  >> option;
 
-    system("cls");
+    system("cls||clear");
 
     switch (option) {
         case '1': 
@@ -479,16 +480,16 @@ void accountPage() {
         fileOut << tempCredentials;
         fileOut.close();
 
-        system("cls");
+        system("cls||clear");
         printCenter("Account info changed successfully", bg_green);
         accountPage();
     } 
     else if (option == 'b') {
-        system("cls");
+        system("cls||clear");
         mainPage();
     } 
     else {
-        system("cls");
+        system("cls||clear");
         printCenter("Invalid option", bg_red);
         accountPage();
     }
@@ -615,7 +616,7 @@ void cartPage() {
     cout << "   Enter your choice: ";
     cin  >> option;
 
-    system("cls");
+    system("cls||clear");
 
     if (option == 'p') {
         paymentPage();
@@ -741,7 +742,7 @@ void productPage(string filepath) {
     selectedProductId = charToInt(option);
 
     if (option == 'b') {
-        system("cls"); 
+        system("cls||clear"); 
         menuPage();
     }
     else if (selectedProductId > 0 && selectedProductId <= products.size()){
@@ -781,7 +782,7 @@ void productPage(string filepath) {
         writeJsonFile(doc, CART_FILE_PATH);
     }
     else {
-        system("cls");
+        system("cls||clear");
         printCenter("Invalid Option", bg_red);
         productPage(filepath);
     }
@@ -791,11 +792,11 @@ void productPage(string filepath) {
     cin  >> option;
 
     if (option == 'y') {
-        system("cls");
+        system("cls||clear");
         productPage(filepath);
     } 
     else if (option == 'n') {
-        system("cls");
+        system("cls||clear");
         menuPage();
     } 
     else {
@@ -844,7 +845,7 @@ void paymentPage() {
     cout << "   Enter your choice: ";
     cin  >> option;
 
-    system("cls");
+    system("cls||clear");
 
     if (option == '1' || option == '2') {
         printCenter("Payment Successful", bg_green);
@@ -961,7 +962,7 @@ void receiptPage() {
     cart.Erase(cart.Begin(), cart.Begin() + cart.Size());
     writeJsonFile(doc, CART_FILE_PATH);
    
-    system("cls");
+    system("cls||clear");
     mainPage();
 }
 
