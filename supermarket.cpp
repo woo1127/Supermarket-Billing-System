@@ -55,7 +55,7 @@ struct LoginInfo {
     string password;
 } loginInfo;
 
-// ********** Pages **********
+// Pages
 void welcomePage();
 void loginPage();
 void signupPage();
@@ -67,7 +67,7 @@ void productPage(string);
 void paymentPage();
 void receiptPage();
 
-// ********** Helper function **********
+// Helper function
 Document readJsonFile(string);
 void writeJsonFile(Document &, string);
 int jsonFindUserPosition(Value &);
@@ -80,9 +80,10 @@ void countSpaceBetween(int, int, int*, int*, int);
 
 /** 
  * @brief  Display the text in the center of the interface
- * @param  text   The text used to display on center
- * @param  color  The text and background color of the centered text
- * @param  width  The width of the interface
+ * @param  text    The text used to display on center
+ * @param  color   The text and background color of the centered text
+ * @param  border  Decide whether to show the border of the left and right side of the program
+ * @param  width   The width of the interface
  */
 template <typename T>
 void printCenter(string text, T (*color)(string), bool border = false, int width = WIDTH + 1) {
@@ -195,9 +196,7 @@ void loginPage() {
             getline(str, storePassword, ',');
 
             if (storeUsername == username && storePassword == password) {
-                loginInfo.userid = storeUserid;
-                loginInfo.username = storeUsername;
-                loginInfo.password = storePassword;
+                loginInfo = {storeUserid, storeUsername, storePassword};
 
                 system("cls");
                 printCenter("Login Successfully!", bg_green);
@@ -233,6 +232,8 @@ void signupPage() {
 
     fstream file(CREDENTIALS_FILE_PATH, ios::in);
 
+    // get the number of line in the credentials txt file
+    // as the new id for new user
     if (file.is_open()) {
         while (getline(file, line)) {
             numOfLine++;
@@ -240,6 +241,8 @@ void signupPage() {
         file.close();
     }
 
+    // open and append the new signup user information 
+    // to the credentials txt file
     fstream file2(CREDENTIALS_FILE_PATH, ios::app);
     newUserid = to_string(numOfLine);
 
@@ -249,9 +252,7 @@ void signupPage() {
           << newPassword;
     file2.close();
 
-    loginInfo.userid = newUserid;
-    loginInfo.username = newUsername;
-    loginInfo.password = newPassword;
+    loginInfo = {newUserid, newUsername, newPassword};
 
     system("cls");
     printCenter("Account set up successfully", bg_green);
@@ -392,6 +393,10 @@ void menuPage() {
     }
 }
 
+/**
+ * @brief  View information of current logged in user. 
+ *         Support to change information.
+ */
 void accountPage() {
     char option;
     string line, word;
@@ -448,7 +453,9 @@ void accountPage() {
         cout << "   Enter new password : ";
         cin >> newPassword;
 
+        // iterate every line in file
         while (getline(fileIn, line)) {
+            // split the line into multiple words separated by comma
             stringstream str(line);
             getline(str, word, ',');
 
@@ -565,6 +572,7 @@ void cartPage() {
     Value & users = doc["users"];
     int userPosition = jsonFindUserPosition(users);
 
+    // if the username is not exist in the file, create and add a new one
     if (userPosition == -1) {
         userPosition = jsonCreateNewUser(users, allocator);
     }
@@ -644,8 +652,8 @@ void cartPage() {
 void productPage(string filepath) {
     char option;
     string line, word;
-    int productId = 0;
-    int productQty = 0;
+    int selectedProductId = 0;
+    int selectedProductQty = 0;
     vector<ProductInfo> products;
 
     int averageSpace = 0;
@@ -730,19 +738,19 @@ void productPage(string filepath) {
     cout << "   Enter your choice: ";
     cin  >> option;
 
+    selectedProductId = charToInt(option);
+
     if (option == 'b') {
         system("cls"); 
         menuPage();
     }
-    else  {
-        productId = charToInt(option);
-
+    else if (selectedProductId > 0 && selectedProductId <= products.size()){
         margin();
         cout << "   Enter the quantity: ";
-        cin >> productQty;
+        cin >> selectedProductQty;
         cout << "\n";
 
-        ProductInfo selectedProduct = products[productId - 1];
+        ProductInfo selectedProduct = products[selectedProductId - 1];
 
         Document doc = readJsonFile(CART_FILE_PATH);
         Document::AllocatorType & allocator = doc.GetAllocator();
@@ -763,14 +771,19 @@ void productPage(string filepath) {
         // add the information of selected product in a key value pair
         newProduct.AddMember("id", cart.Size() + 1, allocator);
         newProduct.AddMember("productName", productName, allocator);
-        newProduct.AddMember("quantity", productQty, allocator);
+        newProduct.AddMember("quantity", selectedProductQty, allocator);
         newProduct.AddMember("productPrice", selectedProduct.productPrice, allocator);
-        newProduct.AddMember("amount", selectedProduct.productPrice * productQty, allocator);
+        newProduct.AddMember("amount", selectedProduct.productPrice * selectedProductQty, allocator);
 
         // append the product details into the cart array of logged user
         cart.PushBack(newProduct, allocator);
 
         writeJsonFile(doc, CART_FILE_PATH);
+    }
+    else {
+        system("cls");
+        printCenter("Invalid Option", bg_red);
+        productPage(filepath);
     }
 
     margin();
@@ -845,6 +858,10 @@ void paymentPage() {
     }
 }
 
+/**
+ * @brief  The design of the supermarket's receipts.
+ *         The receipt is print after the user make payment.
+ */
 void receiptPage() {
     double totalPrice = 0.0;
     int averageSpace = 0;
@@ -909,10 +926,10 @@ void receiptPage() {
     int userPosition = jsonFindUserPosition(users);
     Value & cart = users[userPosition]["cart"];
 
+    // iterate and print the products information store in cart
     for (const auto & p: cart.GetArray()) {
         margin(); 
         cout << "|";
-
         cout << string(averageSpace, ' ') << setw(4)  << right << p["quantity"].GetInt();
         cout << string(averageSpace, ' ') << setw(20) << left  << p["productName"].GetString();                                  
         cout << string(averageSpace, ' ') << setw(6)  << right << fixed 
@@ -940,6 +957,7 @@ void receiptPage() {
     cout << "   Press any key to back to main page: ";
     getch();
 
+    // erase all products in user's cart since payment has make
     cart.Erase(cart.Begin(), cart.Begin() + cart.Size());
     writeJsonFile(doc, CART_FILE_PATH);
    

@@ -34,15 +34,12 @@
                     "quantity": 2,
                     "productPrice": 0.1,
                     "amount": 0.2
-                },
-                {
-                    "id": 5,
-                    "productName": "",
-                    "quantity": 0,
-                    "productPrice": 0.0,
-                    "amount": 0.0
                 }
             ]
+        },
+        {
+            "username": "jethro",
+            "cart": []
         }
     ]
 }
