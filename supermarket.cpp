@@ -9,6 +9,7 @@
 #include <vector>
 #include <iomanip>
 #include <ctime>
+#include <cctype>
 #include <conio.h>
 #include "libraries/rapidjson/document.h"
 #include "libraries/rapidjson/ostreamwrapper.h"
@@ -50,7 +51,7 @@ struct ProductInfo {
     double productPrice;
 };
 
-struct LoginInfo {
+struct{
     string userid;
     string username;
     string password;
@@ -73,7 +74,7 @@ Document readJsonFile(string);
 void writeJsonFile(Document &, string);
 int jsonFindUserPosition(Value &);
 int jsonCreateNewUser(Value &, Document::AllocatorType &);
-int charToInt(char);
+void checkCredentials(const char *, void (*)());
 void lineDivider(char);
 void margin();
 void countSpaceBetween(int, int, int*, int*, int);
@@ -208,16 +209,16 @@ void loginPage() {
     }
 
     system("cls||clear");
-    printCenter("Invalid userid or password, please try again.", bg_red);
+    printCenter("Invalid username or password, please try again.", bg_red);
     welcomePage();
 }
 
 void signupPage() {
     int numOfLine = 0;
-    string newUserid;
-    string newUsername;
-    string newPassword;
     string line;
+    string newUserid;
+    char newUsername[13];
+    char newPassword[9];
 
     cout << '\n';
     lineDivider('=');
@@ -226,10 +227,14 @@ void signupPage() {
     cout << '\n';
     margin(); 
     cout << "     New username : ";
-    cin  >> newUsername;
+    cin.ignore();
+    cin.getline(newUsername, 13);
+    checkCredentials(newUsername, &signupPage);
+
     margin(); 
     cout << "     New password : ";
-    cin  >> newPassword;
+    cin.getline(newPassword, 9);
+    checkCredentials(newPassword, &signupPage);
 
     fstream file(CREDENTIALS_FILE_PATH, ios::in);
 
@@ -401,17 +406,17 @@ void menuPage() {
 void accountPage() {
     char option;
     string line, word;
-    string newUserid;
-    string newPassword;
     string tempCredentials = "";
+    char newUsername[13];
+    char newPassword[9];
 
     /*
     ======================================
                  Account Page             
     ======================================
 
-         Userid   : loginInfo.userid
-         Password : loginInfo.password 
+         Username   : loginInfo.username
+         Password   : loginInfo.password 
 
     --------------------------------------
        Press (b): Back to previous page
@@ -428,7 +433,7 @@ void accountPage() {
     margin(); 
     cout << setw(WIDTH) << left << "|" << "|\n";
     margin(); 
-    cout << setw(17) << "|     Userid   : " << setw(WIDTH - 17) << loginInfo.username << "|\n";
+    cout << setw(17) << "|     Username : " << setw(WIDTH - 17) << loginInfo.username << "|\n";
     margin(); 
     cout << setw(17) << "|     Password : " << setw(WIDTH - 17) << loginInfo.password << "|\n";
     margin(); 
@@ -448,11 +453,15 @@ void accountPage() {
         
     if (option == 'p') {
         margin();
-        cout << "   Enter new userid   : ";
-        cin >> newUserid;
+        cout << "   Enter new username : ";
+        cin.ignore();
+        cin.getline(newUsername, 13);
+        checkCredentials(newUsername, &accountPage);
+
         margin();
         cout << "   Enter new password : ";
-        cin >> newPassword;
+        cin.getline(newPassword, 9);
+        checkCredentials(newPassword, &accountPage);
 
         // iterate every line in file
         while (getline(fileIn, line)) {
@@ -464,9 +473,9 @@ void accountPage() {
                 tempCredentials += line + '\n';
             }
             else if (word == loginInfo.userid) {
-                tempCredentials += loginInfo.userid + ',' + newUserid + ',' + newPassword + '\n';
+                tempCredentials += loginInfo.userid + ',' + newUsername + ',' + newPassword + '\n';
 
-                loginInfo.userid = newUserid;
+                loginInfo.username = newUsername;
                 loginInfo.password = newPassword;
             }
 
@@ -619,14 +628,20 @@ void cartPage() {
     system("cls||clear");
 
     if (option == 'p') {
-        paymentPage();
+        // don't allow checkout if no item in cart
+        if (cart.Size() == 0) {
+            printCenter("Cart has no item, please add one", bg_red);
+            cartPage();
+        }
+        else
+            paymentPage();
     }
     else if (option == 'b') {
         mainPage();
     }
-    else if (charToInt(option) > 0 && charToInt(option) <= cart.Size()) {
+    else if (stoi(&option) > 0 && stoi(&option) <= cart.Size()) {
         // remove selected product from cart
-        cart.Erase(cart.Begin() + charToInt(option) - 1);
+        cart.Erase(cart.Begin() + stoi(&option) - 1);
 
         // reorder the id of each product in cart numerically
         for (SizeType i = 0; i < cart.Size(); i++) {
@@ -739,7 +754,7 @@ void productPage(string filepath) {
     cout << "   Enter your choice: ";
     cin  >> option;
 
-    selectedProductId = charToInt(option);
+    selectedProductId = stoi(&option);
 
     if (option == 'b') {
         system("cls||clear"); 
@@ -790,6 +805,8 @@ void productPage(string filepath) {
     margin();
     cout << "   Item has been added to cart? Continue to add? [y/n]: ";
     cin  >> option;
+
+    option = tolower(option);
 
     if (option == 'y') {
         system("cls||clear");
@@ -851,7 +868,7 @@ void paymentPage() {
         printCenter("Payment Successful", bg_green);
         receiptPage();
     }
-    else if (option = 'b') 
+    else if (option == 'b') 
         mainPage();
     else {
         printCenter("Invalid option", bg_red);
@@ -1036,7 +1053,21 @@ int jsonCreateNewUser(Value & users, Document::AllocatorType & allocator) {
     return position;
 }
 
-int charToInt(char num) {
-    // if '0' == 48 in ascii, minus 48 will get 0 that become the integer of '0'
-    return static_cast<int>(num) - 48;
+/**
+ * @brief  Check if the any blank space contain in the target character array
+ * @param  credentials  The credentials that need to be checked
+ * @param  page         Page to be display after error message showed
+ */
+void checkCredentials(const char * credentials, void (*page)()) {
+    for (int i = 0; i < strlen(credentials); i++) {
+        if (isspace(credentials[i])) {
+            system("cls||clear");
+
+            if (strlen(credentials) <= 13) 
+                printCenter("Username cannot contain blank", bg_red);
+            else if (strlen(credentials) <= 9)
+                printCenter("Password cannot contain blank", bg_red);
+            page();
+        }
+    }
 }
