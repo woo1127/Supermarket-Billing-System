@@ -639,6 +639,7 @@ void cartPage() {
     else if (option == 'b') {
         mainPage();
     }
+    // stoi(&option) convert option from char to int
     else if (stoi(&option) > 0 && stoi(&option) <= cart.Size()) {
         // remove selected product from cart
         cart.Erase(cart.Begin() + stoi(&option) - 1);
@@ -1022,7 +1023,7 @@ int jsonFindUserPosition(Value & users) {
     // loop and check if the value of "userid" key match with the value of userid in
     // loginInfo structure
     for (SizeType i = 0; i < users.Size(); i++) {
-        if (users[i]["username"].GetString() == loginInfo.username) {
+        if (users[i]["userid"].GetString() == loginInfo.userid) {
             position = i;
         } 
     }
@@ -1042,9 +1043,9 @@ int jsonCreateNewUser(Value & users, Document::AllocatorType & allocator) {
 
     Value newCart(kArrayType);
     Value newUsersObject(kObjectType);
-    Value username(loginInfo.username.c_str(), allocator) ;
+    Value userid(loginInfo.userid.c_str(), allocator) ;
 
-    newUsersObject.AddMember("username", username, allocator);
+    newUsersObject.AddMember("userid", userid, allocator);
     newUsersObject.AddMember("cart", newCart, allocator);
 
     position = users.Size();

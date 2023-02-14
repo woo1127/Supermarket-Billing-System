@@ -1,11 +1,11 @@
 {
     "users": [
         {
-            "username": "jeremy",
+            "userid": "1",
             "cart": []
         },
         {
-            "username": "jerry",
+            "userid": "2",
             "cart": [
                 {
                     "id": 3,
@@ -38,7 +38,7 @@
             ]
         },
         {
-            "username": "jethro",
+            "userid": "3",
             "cart": []
         }
     ]
