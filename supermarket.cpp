@@ -97,9 +97,9 @@ void printCenter(string text, T (*color)(string), bool border = false, int width
     margin();
 
     if (border) {
-        front = (width - 2) / 2.0 + ceil(text.length() / 2.0);
+        front = width / 2.0 + ceil(text.length() / 2.0);
         back = width - front;
-        cout << '|' << setw(front) << right << color(text) << setw(back - 2) << color(" ") << "|\n";
+        cout << '|' << setw(front - 1) << right << color(text) << setw(back - 1) << color(" ") << "|\n";
     } else {
         front = width / 2.0 + ceil(text.length() / 2.0);
         back = width - front;
@@ -118,7 +118,7 @@ void checkCredentials(T (&credentials)[N], void (*page)()) {
     string credentials_type = sizeof(credentials) == 13 ? "Username" : "Password";
     string credentials_size = to_string(sizeof(credentials) - 1);
 
-    // check if the credentials is longer than the limit?
+    // check if the length of credentials is longer than the limit?
     if (sizeof(credentials) <= strlen(credentials)) {
             system("cls||clear");
             printCenter(credentials_type + " cannot exceed " + credentials_size + " characters", bg_red);            
@@ -159,7 +159,7 @@ int main() {
 }
 
 void welcomePage() {
-    int option = 0;
+    char option;
 
     cout << '\n';
     lineDivider('=');
@@ -184,13 +184,13 @@ void welcomePage() {
     system("cls||clear");
 
     switch (option) {
-        case 1: 
+        case '1': 
             loginPage(); 
             break;
-        case 2: 
+        case '2': 
             signupPage(); 
             break;
-        case 3:
+        case '3':
             exit(0);
             break;
         default: 
@@ -301,7 +301,7 @@ void signupPage() {
 }
 
 void mainPage() {
-    int option = 0;
+    char option;
 
     /*  
     ======================================
@@ -343,16 +343,16 @@ void mainPage() {
     system("cls||clear");
 
     switch (option) {
-        case 1: 
+        case '1': 
             menuPage(); 
             break;
-        case 2: 
+        case '2': 
             accountPage(); 
             break;
-        case 3: 
+        case '3': 
             cartPage();
             break;
-        case 4: 
+        case '4': 
             welcomePage(); 
             break;
         default: 
@@ -430,6 +430,7 @@ void menuPage() {
             break;
         default: 
             printCenter("Invalid option", bg_red);
+            menuPage();
             break;
     }
 }
@@ -790,7 +791,12 @@ void productPage(string filepath) {
     cout << "   Enter your choice: ";
     cin  >> option;
 
-    selectedProductId = stoi(&option);
+    try {
+        selectedProductId = stoi(&option);
+    }
+    catch (...) {
+        selectedProductId = 0;
+    }
 
     if (option == 'b') {
         system("cls||clear"); 
