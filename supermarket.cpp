@@ -1,3 +1,7 @@
+/*
+    Project    : Supermarket Billing System
+    Created On : 21 January 2023
+*/
 #include <iostream>
 #include <cstdio>
 #include <stdlib.h>
@@ -74,11 +78,9 @@ Document readJsonFile(string);
 void writeJsonFile(Document &, string);
 int jsonFindUserPosition(Value &);
 int jsonCreateNewUser(Value &, Document::AllocatorType &);
-void checkCredentials(const char *, void (*)());
 void lineDivider(char);
 void margin();
 void countSpaceBetween(int, int, int*, int*, int);
-
 
 /** 
  * @brief  Display the text in the center of the interface
@@ -102,6 +104,34 @@ void printCenter(string text, T (*color)(string), bool border = false, int width
         front = width / 2.0 + ceil(text.length() / 2.0);
         back = width - front;
         cout << setw(front) << right << color(text) << setw(back) << color(" ") << '\n';
+    }
+}
+
+/**
+ * @brief  Check the length of credentials not exceed the limit and 
+ *         make sure doesn't have blank space
+ * @param  credentials  The credentials that need to be checked
+ * @param  page         Page to be display after error message showed
+ */
+template <typename T, size_t N>
+void checkCredentials(T (&credentials)[N], void (*page)()) {
+    string credentials_type = sizeof(credentials) == 13 ? "Username" : "Password";
+    string credentials_size = to_string(sizeof(credentials) - 1);
+
+    // check if the credentials is longer than the limit?
+    if (sizeof(credentials) <= strlen(credentials)) {
+            system("cls||clear");
+            printCenter(credentials_type + " cannot exceed " + credentials_size + " characters", bg_red);            
+            page();
+    }
+
+    // loop each char in credentials to check if found any blank character
+    for (int i = 0; i < strlen(credentials); i++) {
+        if (isspace(credentials[i])) {
+            system("cls||clear");
+            printCenter(credentials_type + " cannot contain blank", bg_red);
+            page();
+        }
     }
 }
 
@@ -142,6 +172,8 @@ void welcomePage() {
     margin(); 
     cout << setw(WIDTH) << left << "|     2. Signup" << "|\n";
     margin(); 
+    cout << setw(WIDTH) << left << "|     3. Quit" << "|\n";
+    margin(); 
     cout << setw(WIDTH) << left << "|" << "|\n";
     lineDivider('='); 
     cout << '\n';
@@ -157,6 +189,9 @@ void welcomePage() {
             break;
         case 2: 
             signupPage(); 
+            break;
+        case 3:
+            exit(0);
             break;
         default: 
             printCenter("Invalid option", bg_red);
@@ -228,12 +263,12 @@ void signupPage() {
     margin(); 
     cout << "     New username : ";
     cin.ignore();
-    cin.getline(newUsername, 13);
+    cin.getline(newUsername, 256);
     checkCredentials(newUsername, &signupPage);
 
     margin(); 
     cout << "     New password : ";
-    cin.getline(newPassword, 9);
+    cin.getline(newPassword, 256);
     checkCredentials(newPassword, &signupPage);
 
     fstream file(CREDENTIALS_FILE_PATH, ios::in);
@@ -455,12 +490,12 @@ void accountPage() {
         margin();
         cout << "   Enter new username : ";
         cin.ignore();
-        cin.getline(newUsername, 13);
+        cin.getline(newUsername, 256);
         checkCredentials(newUsername, &accountPage);
 
         margin();
         cout << "   Enter new password : ";
-        cin.getline(newPassword, 9);
+        cin.getline(newPassword, 256);
         checkCredentials(newPassword, &accountPage);
 
         // iterate every line in file
@@ -1041,10 +1076,16 @@ int jsonFindUserPosition(Value & users) {
 int jsonCreateNewUser(Value & users, Document::AllocatorType & allocator) {
     int position = 0;
 
+    // initialize a empty value of json object
     Value newCart(kArrayType);
     Value newUsersObject(kObjectType);
     Value userid(loginInfo.userid.c_str(), allocator) ;
 
+    // exp: 
+    // {
+    //    "useid": 1,
+    //    "cart": []
+    // }
     newUsersObject.AddMember("userid", userid, allocator);
     newUsersObject.AddMember("cart", newCart, allocator);
 
@@ -1052,23 +1093,4 @@ int jsonCreateNewUser(Value & users, Document::AllocatorType & allocator) {
     users.PushBack(newUsersObject, allocator);
 
     return position;
-}
-
-/**
- * @brief  Check if the any blank space contain in the target character array
- * @param  credentials  The credentials that need to be checked
- * @param  page         Page to be display after error message showed
- */
-void checkCredentials(const char * credentials, void (*page)()) {
-    for (int i = 0; i < strlen(credentials); i++) {
-        if (isspace(credentials[i])) {
-            system("cls||clear");
-
-            if (strlen(credentials) <= 13) 
-                printCenter("Username cannot contain blank", bg_red);
-            else if (strlen(credentials) <= 9)
-                printCenter("Password cannot contain blank", bg_red);
-            page();
-        }
-    }
 }
