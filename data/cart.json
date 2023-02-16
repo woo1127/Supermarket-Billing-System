@@ -9,30 +9,30 @@
             "cart": [
                 {
                     "id": 3,
-                    "productName": "Kumah Kari",
+                    "name": "Kumah Kari",
                     "quantity": 1,
-                    "productPrice": 4.3,
+                    "price": 4.3,
                     "amount": 4.3
                 },
                 {
                     "id": 2,
-                    "productName": "Onion",
+                    "name": "Onion",
                     "quantity": 10,
-                    "productPrice": 0.1,
+                    "price": 0.1,
                     "amount": 1.0
                 },
                 {
                     "id": 3,
-                    "productName": "LadyFinger",
+                    "name": "LadyFinger",
                     "quantity": 15,
-                    "productPrice": 0.5,
+                    "price": 0.5,
                     "amount": 7.5
                 },
                 {
                     "id": 4,
-                    "productName": "Onion",
+                    "name": "Onion",
                     "quantity": 2,
-                    "productPrice": 0.1,
+                    "price": 0.1,
                     "amount": 0.2
                 }
             ]

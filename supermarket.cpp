@@ -15,6 +15,7 @@
 #include <ctime>
 #include <cctype>
 #include <conio.h>
+#include <map>
 #include "libraries/rapidjson/document.h"
 #include "libraries/rapidjson/ostreamwrapper.h"
 #include "libraries/rapidjson/istreamwrapper.h"
@@ -82,6 +83,26 @@ void lineDivider(char);
 void margin();
 void countSpaceBetween(int, int, int*, int*, int);
 
+/**
+ * @brief  Count the blank space that should be used as the 
+ *         padding between columns
+ * @param  usedSpace  The space that have been filled with characters
+ * @param  intervals  The number of intervals
+ * @param  averageSpace  The average blank space between each columns
+ * @param  lastSpace  The blank space of last column
+ * @param  width  The width of our program measured by number of characters
+ */
+void countSpaceBetween(int usedSpace, int intervals, int* averageSpace, int* lastSpace, int width = WIDTH) {
+    int totalSpace = width - usedSpace - 2;
+    int avgSpace = totalSpace / intervals;
+
+    int leftSpace = totalSpace - avgSpace * intervals;
+    int finalSpace = avgSpace + leftSpace + 1;
+
+    *averageSpace = avgSpace;
+    *lastSpace = finalSpace;
+}
+
 /** 
  * @brief  Display the text in the center of the interface
  * @param  text    The text used to display on center
@@ -132,6 +153,104 @@ void checkCredentials(T (&credentials)[N], void (*page)()) {
             printCenter(credentials_type + " cannot contain blank", bg_red);
             page();
         }
+    }
+}
+
+template <size_t N>
+void displayTable(string (&headers)[N], Value & data, Document::AllocatorType & alloc, bool printTotal) {
+    int averageSpace = 0;
+    int lastSpace = 0;
+    int usedSpace = 0;
+    int intervals = N + 1;
+    int space = 0;
+    double totalAmount = 0.0;
+
+    map<string, int> tableMap;
+    map<string, string> jsonMap;
+
+    tableMap["No."] = 3;
+    tableMap["Item"] = 20;
+    tableMap["Qty"] = 4;
+    tableMap["Price"] = 6;
+    tableMap["Amount"] = 6;
+
+    jsonMap["No."] = "id";
+    jsonMap["Item"] = "name";
+    jsonMap["Qty"] = "quantity";
+    jsonMap["Price"] = "price";
+    jsonMap["Amount"] = "amount";
+
+    for (int i = 0; i < N; i++)
+        usedSpace += tableMap[headers[i]];
+
+    countSpaceBetween(usedSpace, intervals, &averageSpace, &lastSpace);
+
+    margin();
+    cout << "|";
+
+    int i = 0;
+    while (i < N) {
+        space = tableMap[headers[i]];
+
+        cout << string(averageSpace, ' ') << setw(tableMap[headers[i]]);
+
+        if (space == 3 || space == 20)
+            cout << left << headers[i];
+        else if (space == 4 || space == 6)
+            cout << right << headers[i];
+        i++;
+    }
+    
+    cout << string(lastSpace, ' ') << "|\n";
+    lineDivider('-');
+    margin(); 
+    cout << setw(WIDTH) << left << "|" << "|\n";
+
+    for (const auto & p: data.GetArray()) {
+        margin(); 
+        cout << "|";
+
+        int i = 0;
+        while (i < N) {
+            string header1 = jsonMap[headers[i]];
+            Value header(header1.c_str(), alloc);
+
+            space = tableMap[headers[i]];
+
+            cout << string(averageSpace, ' ') << setw(space);
+
+            switch (space) {
+                case 3:
+                    cout << left << p[header].GetInt();
+                    break;
+                case 20:
+                    cout << left << p[header].GetString();
+                    break;
+                case 4:
+                    cout << right << p[header].GetInt();
+                    break;
+                case 6:
+                    cout << right << fixed << setprecision(2) << p[header].GetDouble();
+                    break;
+            }
+            i++;
+        }
+        cout << string(lastSpace, ' ') << "|\n";
+
+        if (printTotal)
+            totalAmount += p["amount"].GetDouble();
+    }
+
+    margin(); 
+    cout << setw(WIDTH) << left << "|" << "|\n";
+    lineDivider('-');
+
+    if (printTotal) {
+        margin();
+        cout << setw(16) << left << "|   Total Amount"
+            << setw(WIDTH - 16 - lastSpace) << right << totalAmount
+            << string(lastSpace, ' ') << "|\n";
+        lineDivider('-');
     }
 }
 
@@ -414,7 +533,7 @@ void menuPage() {
 
     switch (option) {
         case '1': 
-            productPage("data/canned_food.csv"); 
+            productPage("data/canned_food.json"); 
             break;
         case '2': 
             productPage("data/vegetables.csv"); 
@@ -541,39 +660,19 @@ void accountPage() {
 }
 
 /**
- * @brief  Count the blank space that should be used as the 
- *         padding between columns
- * @param  usedSpace  The space that have been filled with characters
- * @param  intervals  The number of intervals
- * @param  averageSpace  The average blank space between each columns
- * @param  lastSpace  The blank space of last column
- * @param  width  The width of our program measured by number of characters
- */
-void countSpaceBetween(int usedSpace, int intervals, int* averageSpace, int* lastSpace, int width = WIDTH) {
-    int totalSpace = width - usedSpace - 2;
-    int avgSpace = totalSpace / intervals;
-
-    int leftSpace = totalSpace - avgSpace * intervals;
-    int finalSpace = avgSpace + leftSpace + 1;
-
-    *averageSpace = avgSpace;
-    *lastSpace = finalSpace;
-}
-
-/**
  * @brief  The interface of cart page.
  *         User is allow to view and decide whether to
  *         remove product from cart or proceed to checkout.
  */
 void cartPage() {
     char option; 
-    double totalPrice = 0.0;
-    int averageSpace = 0;
-    int lastSpace = 0;
-    int usedSpace = 39;
-    int interval = 6;
+    // double totalPrice = 0.0;
+    // int averageSpace = 0;
+    // int lastSpace = 0;
+    // int usedSpace = 39;
+    // int interval = 6;
 
-    countSpaceBetween(usedSpace, interval, &averageSpace, &lastSpace);
+    // countSpaceBetween(usedSpace, interval, &averageSpace, &lastSpace);
 
     /*
     ======================================
@@ -599,17 +698,17 @@ void cartPage() {
    lineDivider('=');
    printCenter("Cart Page", bg_blue);
    lineDivider('=');
-   margin(); 
-   cout << "|" 
-        << string(averageSpace, ' ') << setw(3)  << left  << "No."
-        << string(averageSpace, ' ') << setw(20) << left  << "Item"
-        << string(averageSpace, ' ') << setw(4)  << right << "Qty"
-        << string(averageSpace, ' ') << setw(6)  << right << "Price"
-        << string(averageSpace, ' ') << setw(6)  << right << "Amount"
-        << string(lastSpace, ' ')    << "|\n";
-    lineDivider('-');
-    margin(); 
-    cout << setw(WIDTH) << left << "|" << "|\n";
+//    margin(); 
+//    cout << "|" 
+//         << string(averageSpace, ' ') << setw(3)  << left  << "No."
+//         << string(averageSpace, ' ') << setw(20) << left  << "Item"
+//         << string(averageSpace, ' ') << setw(4)  << right << "Qty"
+//         << string(averageSpace, ' ') << setw(6)  << right << "Price"
+//         << string(averageSpace, ' ') << setw(6)  << right << "Amount"
+//         << string(lastSpace, ' ')    << "|\n";
+//     lineDivider('-');
+//     margin(); 
+//     cout << setw(WIDTH) << left << "|" << "|\n";
 
     Document doc = readJsonFile(CART_FILE_PATH);
     Document::AllocatorType & allocator = doc.GetAllocator();
@@ -627,30 +726,34 @@ void cartPage() {
     Value & cart = users[userPosition]["cart"];
 
     // loop and display the products from cart array
-    for (const auto & p: cart.GetArray()) {
-        margin(); 
-        cout << "|";
+    // for (const auto & p: cart.GetArray()) {
+    //     margin(); 
+    //     cout << "|";
+    //     cout << string(averageSpace, ' ') << setw(3)  << left  << p["id"].GetInt();
+    //     cout << string(averageSpace, ' ') << setw(20) << left  << p["name"].GetString();
+    //     cout << string(averageSpace, ' ') << setw(4)  << right << p["quantity"].GetInt();
+    //     cout << string(averageSpace, ' ') << setw(6)  << right << fixed 
+    //                                       << setprecision(2) << p["price"].GetDouble();
+    //     cout << string(averageSpace, ' ') << setw(6)  << right << fixed 
+    //                                       << setprecision(2) << p["amount"].GetDouble();
+    //     cout << string(lastSpace, ' ')    << "|\n";
 
-        cout << string(averageSpace, ' ') << setw(3)  << left  << p["id"].GetInt();
-        cout << string(averageSpace, ' ') << setw(20) << left  << p["productName"].GetString();
-        cout << string(averageSpace, ' ') << setw(4)  << right << p["quantity"].GetInt();
-        cout << string(averageSpace, ' ') << setw(6)  << right << fixed 
-                                          << setprecision(2) << p["productPrice"].GetDouble();
-        cout << string(averageSpace, ' ') << setw(6)  << right << fixed 
-                                          << setprecision(2) << p["amount"].GetDouble();
-        cout << string(lastSpace, ' ')    << "|\n";
+    //     totalPrice += p["amount"].GetDouble();
+    // }
 
-        totalPrice += p["amount"].GetDouble();
-    }
+    // margin(); 
+    // cout << setw(WIDTH) << left << "|" << "|\n";
+    // lineDivider('-');
+    // margin(); 
+    // cout << setw(16) << left << "|   Total Amount"
+    //      << setw(WIDTH - 16 - lastSpace) << right << totalPrice
+    //      << string(lastSpace, ' ') << "|\n";
+    // lineDivider('-');
 
-    margin(); 
-    cout << setw(WIDTH) << left << "|" << "|\n";
-    lineDivider('-');
-    margin(); 
-    cout << setw(16) << left << "|   Total Amount"
-         << setw(WIDTH - 16 - lastSpace) << right << totalPrice
-         << string(lastSpace, ' ') << "|\n";
-    lineDivider('-');
+    string headers[] = {"No.", "Item", "Qty", "Price", "Amount"};
+
+    displayTable(headers, cart, allocator, true);
+
     margin(); 
     cout << setw(WIDTH) << left << "|   Press (p): Proceed to checkout"   << "|\n";
     margin(); 
@@ -704,20 +807,15 @@ void cartPage() {
  */
 void productPage(string filepath) {
     char option;
-    string line, word;
     int selectedProductId = 0;
     int selectedProductQty = 0;
-    vector<ProductInfo> products;
 
-    int averageSpace = 0;
-    int lastSpace = 0;
-    int usedSpace = 33;
-    int interval = 5;
+    // int averageSpace = 0;
+    // int lastSpace = 0;
+    // int usedSpace = 33;
+    // int interval = 5;
 
-    countSpaceBetween(usedSpace, interval, &averageSpace, &lastSpace);
-
-    fstream file(filepath, ios::in);
-    getline(file, line);
+    // countSpaceBetween(usedSpace, interval, &averageSpace, &lastSpace);
     
     /*
     ======================================
@@ -736,53 +834,47 @@ void productPage(string filepath) {
        Enter your choices:
     */
 
+    Document doc = readJsonFile(filepath);
+    Document::AllocatorType & allocator = doc.GetAllocator();
+
+    Value & category = doc["category"];
+    Value & products = doc["products"];
+
     cout << '\n';
     lineDivider('=');
-    printCenter("Product Page", bg_blue);
+    printCenter(category.GetString(), bg_blue);
     lineDivider('=');
-    margin(); 
-    cout << "|" 
-         << string(averageSpace, ' ') << setw(3)  << left  << "No."
-         << string(averageSpace, ' ') << setw(20) << left  << "Item"
-         << string(averageSpace, ' ') << setw(4)  << right << "Qty"
-         << string(averageSpace, ' ') << setw(6)  << right << "Price"
-         << string(lastSpace, ' ')    << "|\n";
-    lineDivider('-');
-    margin(); 
-    cout << setw(WIDTH) << left << "|" << "|\n";
 
-    if (file.is_open()) {
-        while (getline(file, line)) {
-            stringstream str(line);
-            ProductInfo p;
+    string headers[] = {"No.", "Item", "Qty", "Price"};
 
-            margin(); cout << "|"; 
+    displayTable(headers, products, allocator, false);
 
-            getline(str, word, ',');
-            cout << string(averageSpace, ' ') << setw(3)  << left << word;
-            p.productId = stoi(word);
+    // margin(); 
+    // cout << "|" 
+    //      << string(averageSpace, ' ') << setw(3)  << left  << "No."
+    //      << string(averageSpace, ' ') << setw(20) << left  << "Item"
+    //      << string(averageSpace, ' ') << setw(4)  << right << "Qty"
+    //      << string(averageSpace, ' ') << setw(6)  << right << "Price"
+    //      << string(lastSpace, ' ')    << "|\n";
+    // lineDivider('-');
+    // margin(); 
+    // cout << setw(WIDTH) << left << "|" << "|\n";
 
-            getline(str, word, ',');
-            cout << string(averageSpace, ' ') << setw(20) << left  << word;
-            p.productName = word;
+    // for (const auto & p: products.GetArray()) {
+    //     margin(); 
+    //     cout << "|";
+    //     cout << string(averageSpace, ' ') << setw(3)  << left  << p["id"].GetInt();
+    //     cout << string(averageSpace, ' ') << setw(20) << left  << p["name"].GetString();
+    //     cout << string(averageSpace, ' ') << setw(4)  << right << p["quantity"].GetInt();
+    //     cout << string(averageSpace, ' ') << setw(6)  << right << fixed 
+    //                                       << setprecision(2) << p["price"].GetDouble();
+    //     cout << string(lastSpace, ' ')    << "|\n";
+    // }
 
-            getline(str, word, ',');
-            cout << string(averageSpace, ' ') << setw(4)  << right << word;
-            p.productQty = stoi(word);
+    // margin(); 
+    // cout << setw(WIDTH) << left << "|" << "|\n";
+    // lineDivider('-');
 
-            getline(str, word, ',');
-            cout << string(averageSpace, ' ') << setw(6)  << right << word;
-            p.productPrice = stod(word);
-
-            cout << string(lastSpace, ' ') << "|\n";
-            products.push_back(p);
-        }
-        file.close();
-    }
-
-    margin(); 
-    cout << setw(WIDTH) << left << "|" << "|\n";
-    lineDivider('-');
     margin(); 
     cout << setw(WIDTH) << left << "|   Press (b): Back to previous page" << "|\n";
     lineDivider('='); 
@@ -802,41 +894,46 @@ void productPage(string filepath) {
         system("cls||clear"); 
         menuPage();
     }
-    else if (selectedProductId > 0 && selectedProductId <= products.size()){
+    else if (selectedProductId > 0 && selectedProductId <= products.Size()){
         margin();
         cout << "   Enter the quantity: ";
         cin >> selectedProductQty;
         cout << "\n";
 
-        ProductInfo selectedProduct = products[selectedProductId - 1];
+        Value & selectedProduct = products[selectedProductId - 1];
+        string name = selectedProduct["name"].GetString();
+        Value productName(name.c_str(), allocator);
 
-        Document doc = readJsonFile(CART_FILE_PATH);
-        Document::AllocatorType & allocator = doc.GetAllocator();
+        Document doc2 = readJsonFile(CART_FILE_PATH);
+        Document::AllocatorType & allocator2 = doc2.GetAllocator();
 
-        Value & users = doc["users"];
-        Value productName(selectedProduct.productName.c_str(), allocator);
+        Value & users = doc2["users"];
 
         int userPosition = jsonFindUserPosition(users);
         
         // if user info not found in json, then create a new user in json
         if (userPosition == -1) {
-            userPosition = jsonCreateNewUser(users, allocator);
+            userPosition = jsonCreateNewUser(users, allocator2);
         }
 
         Value & cart = users[userPosition]["cart"];
         Value newProduct(kObjectType);
 
         // add the information of selected product in a key value pair
-        newProduct.AddMember("id", cart.Size() + 1, allocator);
-        newProduct.AddMember("productName", productName, allocator);
-        newProduct.AddMember("quantity", selectedProductQty, allocator);
-        newProduct.AddMember("productPrice", selectedProduct.productPrice, allocator);
-        newProduct.AddMember("amount", selectedProduct.productPrice * selectedProductQty, allocator);
+        newProduct.AddMember("id", cart.Size() + 1, allocator2);
+        newProduct.AddMember("name", productName, allocator2);
+        newProduct.AddMember("quantity", selectedProductQty, allocator2);
+        newProduct.AddMember("price", selectedProduct["price"].GetDouble(), allocator2);
+        newProduct.AddMember("amount", selectedProduct["price"].GetDouble() * selectedProductQty, allocator2);
 
         // append the product details into the cart array of logged user
-        cart.PushBack(newProduct, allocator);
+        cart.PushBack(newProduct, allocator2);
 
-        writeJsonFile(doc, CART_FILE_PATH);
+        // decrease the product quantity in store
+        selectedProduct["quantity"] = selectedProduct["quantity"].GetInt() - selectedProductQty;
+
+        writeJsonFile(doc, filepath);
+        writeJsonFile(doc2, CART_FILE_PATH);
     }
     else {
         system("cls||clear");
@@ -923,11 +1020,11 @@ void paymentPage() {
  *         The receipt is print after the user make payment.
  */
 void receiptPage() {
-    double totalPrice = 0.0;
-    int averageSpace = 0;
-    int lastSpace = 0;
-    int usedSpace = 30;
-    int intervals = 4;
+    // double totalPrice = 0.0;
+    // int averageSpace = 0;
+    // int lastSpace = 0;
+    // int usedSpace = 30;
+    // int intervals = 4;
     char datetime1[50];
     string datetime2;
 
@@ -939,7 +1036,7 @@ void receiptPage() {
     // convert char array to string
     datetime2 = datetime1;
 
-    countSpaceBetween(usedSpace, intervals, &averageSpace, &lastSpace);
+    // countSpaceBetween(usedSpace, intervals, &averageSpace, &lastSpace);
 
     /* 
     ======================================
@@ -955,7 +1052,7 @@ void receiptPage() {
         1    Food two              4.50
 
     --------------------------------------
-       Total:                      24.60
+       Total Amount:               24.60
     --------------------------------------
                 THANK YOU!
 
@@ -970,15 +1067,15 @@ void receiptPage() {
     printCenter("Tesco", bg_default, true);
     printCenter("TEL: 043456789", bg_default, true);
     lineDivider('-');
-    margin(); 
-    cout << "|" 
-         << string(averageSpace, ' ') << setw(4)  << right << "Qty"
-         << string(averageSpace, ' ') << setw(20) << left  << "Item"
-         << string(averageSpace, ' ') << setw(6)  << right << "Amount"
-         << string(lastSpace, ' ')    << "|\n";
-    lineDivider('-');
-    margin(); 
-    cout << setw(WIDTH) << left << "|" << "|\n";
+    // margin(); 
+    // cout << "|" 
+    //      << string(averageSpace, ' ') << setw(4)  << right << "Qty"
+    //      << string(averageSpace, ' ') << setw(20) << left  << "Item"
+    //      << string(averageSpace, ' ') << setw(6)  << right << "Amount"
+    //      << string(lastSpace, ' ')    << "|\n";
+    // lineDivider('-');
+    // margin(); 
+    // cout << setw(WIDTH) << left << "|" << "|\n";
 
     Document doc = readJsonFile(CART_FILE_PATH);
     
@@ -987,26 +1084,31 @@ void receiptPage() {
     Value & cart = users[userPosition]["cart"];
 
     // iterate and print the products information store in cart
-    for (const auto & p: cart.GetArray()) {
-        margin(); 
-        cout << "|";
-        cout << string(averageSpace, ' ') << setw(4)  << right << p["quantity"].GetInt();
-        cout << string(averageSpace, ' ') << setw(20) << left  << p["productName"].GetString();                                  
-        cout << string(averageSpace, ' ') << setw(6)  << right << fixed 
-                                          << setprecision(2) << p["amount"].GetDouble();
-        cout << string(lastSpace, ' ')    << "|\n";
+    // for (const auto & p: cart.GetArray()) {
+    //     margin(); 
+    //     cout << "|";
+    //     cout << string(averageSpace, ' ') << setw(4)  << right << p["quantity"].GetInt();
+    //     cout << string(averageSpace, ' ') << setw(20) << left  << p["name"].GetString();                                  
+    //     cout << string(averageSpace, ' ') << setw(6)  << right << fixed 
+    //                                       << setprecision(2) << p["amount"].GetDouble();
+    //     cout << string(lastSpace, ' ')    << "|\n";
 
-        totalPrice += p["amount"].GetDouble();
-    }
+    //     totalPrice += p["amount"].GetDouble();
+    // }
 
-    margin(); 
-    cout << setw(WIDTH) << left << "|" << "|\n";
-    lineDivider('-');
-    margin();
-    cout << setw(16) << left << "|   Total Amount"
-         << setw(WIDTH - 16 - lastSpace) << right << totalPrice
-         << string(lastSpace, ' ') << "|\n";
-    lineDivider('-');
+    // margin(); 
+    // cout << setw(WIDTH) << left << "|" << "|\n";
+    // lineDivider('-');
+
+    string headers[] = {"Qty", "Item", "Amount"};
+
+    displayTable(headers, cart, doc.GetAllocator(), true);
+
+    // margin();
+    // cout << setw(16) << left << "|   Total Amount"
+    //      << setw(WIDTH - 16 - lastSpace) << right << totalPrice
+    //      << string(lastSpace, ' ') << "|\n";
+    // lineDivider('-');
     printCenter("THANK YOU!", bg_default, true);
     margin();
     cout << setw(WIDTH) << left << "|" << "|\n";

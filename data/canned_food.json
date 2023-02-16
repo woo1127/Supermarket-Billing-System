@@ -1,0 +1,23 @@
+{
+    "category": "Canned food",
+    "products": [
+        {
+            "id": 1,
+            "name": "Rendang Ayam",
+            "quantity": 8,
+            "price": 8.7
+        },
+        {
+            "id": 2,
+            "name": "Sardine Ikan",
+            "quantity": 16,
+            "price": 9.9
+        },
+        {
+            "id": 3,
+            "name": "Kurma Kari",
+            "quantity": 40,
+            "price": 4.3
+        }
+    ]
+}
