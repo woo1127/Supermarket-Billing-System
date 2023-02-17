@@ -4,19 +4,19 @@
         {
             "id": 1,
             "name": "Rendang Ayam",
-            "quantity": 8,
+            "quantity": 4,
             "price": 8.7
         },
         {
             "id": 2,
             "name": "Sardine Ikan",
-            "quantity": 16,
+            "quantity": 6,
             "price": 9.9
         },
         {
             "id": 3,
             "name": "Kurma Kari",
-            "quantity": 40,
+            "quantity": 37,
             "price": 4.3
         }
     ]

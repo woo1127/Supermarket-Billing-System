@@ -83,26 +83,6 @@ void lineDivider(char);
 void margin();
 void countSpaceBetween(int, int, int*, int*, int);
 
-/**
- * @brief  Count the blank space that should be used as the 
- *         padding between columns
- * @param  usedSpace  The space that have been filled with characters
- * @param  intervals  The number of intervals
- * @param  averageSpace  The average blank space between each columns
- * @param  lastSpace  The blank space of last column
- * @param  width  The width of our program measured by number of characters
- */
-void countSpaceBetween(int usedSpace, int intervals, int* averageSpace, int* lastSpace, int width = WIDTH) {
-    int totalSpace = width - usedSpace - 2;
-    int avgSpace = totalSpace / intervals;
-
-    int leftSpace = totalSpace - avgSpace * intervals;
-    int finalSpace = avgSpace + leftSpace + 1;
-
-    *averageSpace = avgSpace;
-    *lastSpace = finalSpace;
-}
-
 /** 
  * @brief  Display the text in the center of the interface
  * @param  text    The text used to display on center
@@ -156,6 +136,13 @@ void checkCredentials(T (&credentials)[N], void (*page)()) {
     }
 }
 
+/**
+ * @brief  Display products in a table form with specify headers
+ * @param  headers     The headers of the table
+ * @param  data        The data tha need to be display in the cells of table
+ * @param  alloc       The allocator of a DOM of a json
+ * @param  printTotal  Print the total amount in the last column of table
+ */
 template <size_t N>
 void displayTable(string (&headers)[N], Value & data, Document::AllocatorType & alloc, bool printTotal) {
     int averageSpace = 0;
@@ -168,12 +155,16 @@ void displayTable(string (&headers)[N], Value & data, Document::AllocatorType & 
     map<string, int> tableMap;
     map<string, string> jsonMap;
 
+    // key value pair of header names with its 
+    // space used inside a column of table
     tableMap["No."] = 3;
     tableMap["Item"] = 20;
     tableMap["Qty"] = 4;
     tableMap["Price"] = 6;
     tableMap["Amount"] = 6;
 
+    // map between the value of header names that 
+    // displayed on screen with the keys in json
     jsonMap["No."] = "id";
     jsonMap["Item"] = "name";
     jsonMap["Qty"] = "quantity";
@@ -183,11 +174,12 @@ void displayTable(string (&headers)[N], Value & data, Document::AllocatorType & 
     for (int i = 0; i < N; i++)
         usedSpace += tableMap[headers[i]];
 
-    countSpaceBetween(usedSpace, intervals, &averageSpace, &lastSpace);
+    countSpaceBetween(usedSpace, intervals, &averageSpace, &lastSpace, WIDTH);
 
     margin();
     cout << "|";
 
+    // loop to display the header names
     int i = 0;
     while (i < N) {
         space = tableMap[headers[i]];
@@ -205,7 +197,8 @@ void displayTable(string (&headers)[N], Value & data, Document::AllocatorType & 
     lineDivider('-');
     margin(); 
     cout << setw(WIDTH) << left << "|" << "|\n";
-
+    
+    // loop to display the data in table
     for (const auto & p: data.GetArray()) {
         margin(); 
         cout << "|";
@@ -245,6 +238,7 @@ void displayTable(string (&headers)[N], Value & data, Document::AllocatorType & 
     cout << setw(WIDTH) << left << "|" << "|\n";
     lineDivider('-');
 
+    // display the total amount if printTotal set to true
     if (printTotal) {
         margin();
         cout << setw(16) << left << "|   Total Amount"
@@ -536,10 +530,10 @@ void menuPage() {
             productPage("data/canned_food.json"); 
             break;
         case '2': 
-            productPage("data/vegetables.csv"); 
+            productPage("data/vegetables.json"); 
             break;
         case '3': 
-            productPage("data/fruits.csv"); 
+            productPage("data/fruits.json"); 
             break;
         case 'b': 
             mainPage(); 
@@ -665,15 +659,6 @@ void accountPage() {
  *         remove product from cart or proceed to checkout.
  */
 void cartPage() {
-    char option; 
-    // double totalPrice = 0.0;
-    // int averageSpace = 0;
-    // int lastSpace = 0;
-    // int usedSpace = 39;
-    // int interval = 6;
-
-    // countSpaceBetween(usedSpace, interval, &averageSpace, &lastSpace);
-
     /*
     ======================================
                   Cart Page               
@@ -694,21 +679,7 @@ void cartPage() {
        Enter number to unselect product:
     */
 
-   cout << '\n';
-   lineDivider('=');
-   printCenter("Cart Page", bg_blue);
-   lineDivider('=');
-//    margin(); 
-//    cout << "|" 
-//         << string(averageSpace, ' ') << setw(3)  << left  << "No."
-//         << string(averageSpace, ' ') << setw(20) << left  << "Item"
-//         << string(averageSpace, ' ') << setw(4)  << right << "Qty"
-//         << string(averageSpace, ' ') << setw(6)  << right << "Price"
-//         << string(averageSpace, ' ') << setw(6)  << right << "Amount"
-//         << string(lastSpace, ' ')    << "|\n";
-//     lineDivider('-');
-//     margin(); 
-//     cout << setw(WIDTH) << left << "|" << "|\n";
+    char option; 
 
     Document doc = readJsonFile(CART_FILE_PATH);
     Document::AllocatorType & allocator = doc.GetAllocator();
@@ -718,39 +689,18 @@ void cartPage() {
     int userPosition = jsonFindUserPosition(users);
 
     // if the username is not exist in the file, create and add a new one
-    if (userPosition == -1) {
+    if (userPosition == -1) 
         userPosition = jsonCreateNewUser(users, allocator);
-    }
 
     // Get the value of "cart" key
     Value & cart = users[userPosition]["cart"];
 
-    // loop and display the products from cart array
-    // for (const auto & p: cart.GetArray()) {
-    //     margin(); 
-    //     cout << "|";
-    //     cout << string(averageSpace, ' ') << setw(3)  << left  << p["id"].GetInt();
-    //     cout << string(averageSpace, ' ') << setw(20) << left  << p["name"].GetString();
-    //     cout << string(averageSpace, ' ') << setw(4)  << right << p["quantity"].GetInt();
-    //     cout << string(averageSpace, ' ') << setw(6)  << right << fixed 
-    //                                       << setprecision(2) << p["price"].GetDouble();
-    //     cout << string(averageSpace, ' ') << setw(6)  << right << fixed 
-    //                                       << setprecision(2) << p["amount"].GetDouble();
-    //     cout << string(lastSpace, ' ')    << "|\n";
-
-    //     totalPrice += p["amount"].GetDouble();
-    // }
-
-    // margin(); 
-    // cout << setw(WIDTH) << left << "|" << "|\n";
-    // lineDivider('-');
-    // margin(); 
-    // cout << setw(16) << left << "|   Total Amount"
-    //      << setw(WIDTH - 16 - lastSpace) << right << totalPrice
-    //      << string(lastSpace, ' ') << "|\n";
-    // lineDivider('-');
-
     string headers[] = {"No.", "Item", "Qty", "Price", "Amount"};
+
+    cout << '\n';
+    lineDivider('=');
+    printCenter("Cart Page", bg_blue);
+    lineDivider('=');
 
     displayTable(headers, cart, allocator, true);
 
@@ -806,17 +756,6 @@ void cartPage() {
  *                   of particular category
  */
 void productPage(string filepath) {
-    char option;
-    int selectedProductId = 0;
-    int selectedProductQty = 0;
-
-    // int averageSpace = 0;
-    // int lastSpace = 0;
-    // int usedSpace = 33;
-    // int interval = 5;
-
-    // countSpaceBetween(usedSpace, interval, &averageSpace, &lastSpace);
-    
     /*
     ======================================
                 Product Page             
@@ -834,46 +773,24 @@ void productPage(string filepath) {
        Enter your choices:
     */
 
+    char option;
+    int selectedProductId = 0;
+    int selectedProductQty = 0;
+
     Document doc = readJsonFile(filepath);
     Document::AllocatorType & allocator = doc.GetAllocator();
 
     Value & category = doc["category"];
     Value & products = doc["products"];
 
+    string headers[] = {"No.", "Item", "Qty", "Price"};
+
     cout << '\n';
     lineDivider('=');
     printCenter(category.GetString(), bg_blue);
     lineDivider('=');
 
-    string headers[] = {"No.", "Item", "Qty", "Price"};
-
     displayTable(headers, products, allocator, false);
-
-    // margin(); 
-    // cout << "|" 
-    //      << string(averageSpace, ' ') << setw(3)  << left  << "No."
-    //      << string(averageSpace, ' ') << setw(20) << left  << "Item"
-    //      << string(averageSpace, ' ') << setw(4)  << right << "Qty"
-    //      << string(averageSpace, ' ') << setw(6)  << right << "Price"
-    //      << string(lastSpace, ' ')    << "|\n";
-    // lineDivider('-');
-    // margin(); 
-    // cout << setw(WIDTH) << left << "|" << "|\n";
-
-    // for (const auto & p: products.GetArray()) {
-    //     margin(); 
-    //     cout << "|";
-    //     cout << string(averageSpace, ' ') << setw(3)  << left  << p["id"].GetInt();
-    //     cout << string(averageSpace, ' ') << setw(20) << left  << p["name"].GetString();
-    //     cout << string(averageSpace, ' ') << setw(4)  << right << p["quantity"].GetInt();
-    //     cout << string(averageSpace, ' ') << setw(6)  << right << fixed 
-    //                                       << setprecision(2) << p["price"].GetDouble();
-    //     cout << string(lastSpace, ' ')    << "|\n";
-    // }
-
-    // margin(); 
-    // cout << setw(WIDTH) << left << "|" << "|\n";
-    // lineDivider('-');
 
     margin(); 
     cout << setw(WIDTH) << left << "|   Press (b): Back to previous page" << "|\n";
@@ -1020,24 +937,6 @@ void paymentPage() {
  *         The receipt is print after the user make payment.
  */
 void receiptPage() {
-    // double totalPrice = 0.0;
-    // int averageSpace = 0;
-    // int lastSpace = 0;
-    // int usedSpace = 30;
-    // int intervals = 4;
-    char datetime1[50];
-    string datetime2;
-
-    // get the currect date and time
-    time_t t = time(0);
-    // format the date and time into specify format, in this case 
-    // is dd/mm/yyyy and time in 12-hour clock
-    strftime(datetime1, 50, "%d / %m / %Y   %I:%M %p", localtime(&t));
-    // convert char array to string
-    datetime2 = datetime1;
-
-    // countSpaceBetween(usedSpace, intervals, &averageSpace, &lastSpace);
-
     /* 
     ======================================
                   Receipt
@@ -1060,22 +959,16 @@ void receiptPage() {
     ======================================
     */
 
-    cout << '\n';
-    lineDivider('=');
-    printCenter("Receipt", bg_blue);
-    lineDivider('=');
-    printCenter("Tesco", bg_default, true);
-    printCenter("TEL: 043456789", bg_default, true);
-    lineDivider('-');
-    // margin(); 
-    // cout << "|" 
-    //      << string(averageSpace, ' ') << setw(4)  << right << "Qty"
-    //      << string(averageSpace, ' ') << setw(20) << left  << "Item"
-    //      << string(averageSpace, ' ') << setw(6)  << right << "Amount"
-    //      << string(lastSpace, ' ')    << "|\n";
-    // lineDivider('-');
-    // margin(); 
-    // cout << setw(WIDTH) << left << "|" << "|\n";
+    char datetime1[50];
+    string datetime2;
+
+    // get the currect date and time
+    time_t t = time(0);
+    // format the date and time into specify format, in this case 
+    // is dd/mm/yyyy and time in 12-hour clock
+    strftime(datetime1, 50, "%d / %m / %Y   %I:%M %p", localtime(&t));
+    // convert char array to string
+    datetime2 = datetime1;
 
     Document doc = readJsonFile(CART_FILE_PATH);
     
@@ -1083,32 +976,18 @@ void receiptPage() {
     int userPosition = jsonFindUserPosition(users);
     Value & cart = users[userPosition]["cart"];
 
-    // iterate and print the products information store in cart
-    // for (const auto & p: cart.GetArray()) {
-    //     margin(); 
-    //     cout << "|";
-    //     cout << string(averageSpace, ' ') << setw(4)  << right << p["quantity"].GetInt();
-    //     cout << string(averageSpace, ' ') << setw(20) << left  << p["name"].GetString();                                  
-    //     cout << string(averageSpace, ' ') << setw(6)  << right << fixed 
-    //                                       << setprecision(2) << p["amount"].GetDouble();
-    //     cout << string(lastSpace, ' ')    << "|\n";
-
-    //     totalPrice += p["amount"].GetDouble();
-    // }
-
-    // margin(); 
-    // cout << setw(WIDTH) << left << "|" << "|\n";
-    // lineDivider('-');
-
     string headers[] = {"Qty", "Item", "Amount"};
+
+    cout << '\n';
+    lineDivider('=');
+    printCenter("Receipt", bg_blue);
+    lineDivider('=');
+    printCenter("Tesco", bg_default, true);
+    printCenter("TEL: 043456789", bg_default, true);
+    lineDivider('-');
 
     displayTable(headers, cart, doc.GetAllocator(), true);
 
-    // margin();
-    // cout << setw(16) << left << "|   Total Amount"
-    //      << setw(WIDTH - 16 - lastSpace) << right << totalPrice
-    //      << string(lastSpace, ' ') << "|\n";
-    // lineDivider('-');
     printCenter("THANK YOU!", bg_default, true);
     margin();
     cout << setw(WIDTH) << left << "|" << "|\n";
@@ -1201,4 +1080,24 @@ int jsonCreateNewUser(Value & users, Document::AllocatorType & allocator) {
     users.PushBack(newUsersObject, allocator);
 
     return position;
+}
+
+/**
+ * @brief  Count the blank space that should be used as the 
+ *         padding between columns
+ * @param  usedSpace  The space that have been filled with characters
+ * @param  intervals  The number of intervals
+ * @param  averageSpace  The average blank space between each columns
+ * @param  lastSpace  The blank space of last column
+ * @param  width  The width of our program measured by number of characters
+ */
+void countSpaceBetween(int usedSpace, int intervals, int* averageSpace, int* lastSpace, int width) {
+    int totalSpace = width - usedSpace - 2;
+    int avgSpace = totalSpace / intervals;
+
+    int leftSpace = totalSpace - avgSpace * intervals;
+    int finalSpace = avgSpace + leftSpace + 1;
+
+    *averageSpace = avgSpace;
+    *lastSpace = finalSpace;
 }
