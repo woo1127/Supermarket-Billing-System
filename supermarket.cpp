@@ -275,9 +275,9 @@ void welcomePage() {
     char option;
 
     cout << '\n';
-    lineDivider('=');
+    lineDivider('*');
     printCenter("Welcome to Tesco Supermarket", bg_blue);
-    lineDivider('=');
+    lineDivider('*');
     margin(); 
     cout << setw(WIDTH) << left << "|" << "|\n";
     margin(); 
@@ -322,9 +322,9 @@ void loginPage() {
     string line, word;
 
     cout << '\n';
-    lineDivider('=');
+    lineDivider('*');
     printCenter("Login Page", bg_blue);
-    lineDivider('='); 
+    lineDivider('*'); 
     cout << '\n';
     margin(); 
     cout << "     Username : ";
@@ -369,9 +369,9 @@ void signupPage() {
     char newPassword[9];
 
     cout << '\n';
-    lineDivider('=');
+    lineDivider('*');
     printCenter("Signup Page", bg_blue);
-    lineDivider('='); 
+    lineDivider('*'); 
     cout << '\n';
     margin(); 
     cout << "     New username : ";
@@ -416,25 +416,10 @@ void signupPage() {
 void mainPage() {
     char option;
 
-    /*  
-    ======================================
-                Main Page              
-    ======================================
-                        
-         1. Menu                   
-         2. Account                    
-         3. Cart
-         4. Logout                        
-    
-    ======================================
-    
-       Enter your choice:
-    */
-
     cout << '\n';
-    lineDivider('=');
+    lineDivider('*');
     printCenter("Main Page", bg_blue);
-    lineDivider('=');
+    lineDivider('*');
     margin(); 
     cout << setw(WIDTH) << left << "|" << "|\n";
     margin(); 
@@ -478,28 +463,10 @@ void mainPage() {
 void menuPage() {
     char option;
 
-    /*  
-    ======================================
-                Menu Page              
-    ======================================
-    
-       Categories:                        
-         1. Canned Food                   
-         2. Vegetables                    
-         3. Fruits                        
-    
-    --------------------------------------
-       Press (b): Back to previos page    
-       Press (p): Proceed to checkout     
-    ======================================
-    
-       Enter your choice:
-    */
-
     cout << '\n';
-    lineDivider('=');
+    lineDivider('*');
     printCenter("Menu Page", bg_blue);
-    lineDivider('=');
+    lineDivider('*');
     margin(); 
     cout << setw(WIDTH) << left << "|" << "|\n";
     margin(); 
@@ -514,9 +481,9 @@ void menuPage() {
     cout << setw(WIDTH) << left << "|" << "|\n";
     lineDivider('-');
     margin(); 
-    cout << setw(WIDTH) << left << "|   Press (b): Back to previos page" << "|\n";
+    cout << setw(WIDTH) << left << "|   Enter (b): Back to previos page" << "|\n";
     margin(); 
-    cout << setw(WIDTH) << left << "|   Press (p): Proceed to checkout"  << "|\n";
+    cout << setw(WIDTH) << left << "|   Enter (p): Proceed to checkout"  << "|\n";
     lineDivider('='); 
     cout << '\n';
     margin(); 
@@ -559,26 +526,10 @@ void accountPage() {
     char newUsername[13];
     char newPassword[9];
 
-    /*
-    ======================================
-                 Account Page             
-    ======================================
-
-         Username   : loginInfo.username
-         Password   : loginInfo.password 
-
-    --------------------------------------
-       Press (b): Back to previous page
-       Press (p): Change account info
-    ======================================
-
-       Enter your choices:
-    */
-
     cout << '\n';
-    lineDivider('=');
+    lineDivider('*');
     printCenter("Account Page", bg_blue);
-    lineDivider('=');
+    lineDivider('*');
     margin(); 
     cout << setw(WIDTH) << left << "|" << "|\n";
     margin(); 
@@ -589,9 +540,9 @@ void accountPage() {
     cout << setw(WIDTH) << left << "|" << "|\n";
     lineDivider('-');
     margin(); 
-    cout << setw(WIDTH) << left << "|     Press (p): Change account info"   << "|\n";
+    cout << setw(WIDTH) << left << "|     Enter (p): Change account info"   << "|\n";
     margin(); 
-    cout << setw(WIDTH) << left << "|     Press (b): Back to previous page" << "|\n";
+    cout << setw(WIDTH) << left << "|     Enter (b): Back to previous page" << "|\n";
     lineDivider('='); 
     cout << '\n';
     margin(); 
@@ -659,26 +610,6 @@ void accountPage() {
  *         remove product from cart or proceed to checkout.
  */
 void cartPage() {
-    /*
-    ======================================
-                  Cart Page               
-    ======================================
-      No. Item       Qty    Price   Amount
-    --------------------------------------
-       
-       1. Food Name    2     4.20    8.40
-       2. Food Name    5     5.40   27.00
-       
-    --------------------------------------
-       Total Amount :               35.40
-    --------------------------------------
-       Press (p): Proceed to checkout
-       Press (b): Back to previos page
-    ======================================
-
-       Enter number to unselect product:
-    */
-
     char option; 
 
     Document doc = readJsonFile(CART_FILE_PATH);
@@ -698,20 +629,20 @@ void cartPage() {
     string headers[] = {"No.", "Item", "Qty", "Price", "Amount"};
 
     cout << '\n';
-    lineDivider('=');
+    lineDivider('*');
     printCenter("Cart Page", bg_blue);
-    lineDivider('=');
+    lineDivider('*');
 
     displayTable(headers, cart, allocator, true);
 
     margin(); 
-    cout << setw(WIDTH) << left << "|   Press (p): Proceed to checkout"   << "|\n";
+    cout << setw(WIDTH) << left << "|   Enter (p): Proceed to checkout"   << "|\n";
     margin(); 
-    cout << setw(WIDTH) << left << "|   Press (b): Back to previous page" << "|\n";
+    cout << setw(WIDTH) << left << "|   Enter (b): Back to previous page" << "|\n";
     lineDivider('='); 
     cout << '\n';
     margin(); 
-    cout << "   Enter your choice: ";
+    cout << "   Enter number to unselect product: ";
     cin  >> option;
 
     system("cls||clear");
@@ -756,23 +687,6 @@ void cartPage() {
  *                   of particular category
  */
 void productPage(string filepath) {
-    /*
-    ======================================
-                Product Page             
-    ======================================
-        No.  Item          Qty    Price
-    --------------------------------------
-       
-        1.   Food Name     10     4.20
-        2.   Food Name      5     5.40
-       
-    --------------------------------------
-       Press (b): Back to previos page
-    ======================================
-
-       Enter your choices:
-    */
-
     char option;
     int selectedProductId = 0;
     int selectedProductQty = 0;
@@ -786,14 +700,14 @@ void productPage(string filepath) {
     string headers[] = {"No.", "Item", "Qty", "Price"};
 
     cout << '\n';
-    lineDivider('=');
+    lineDivider('*');
     printCenter(category.GetString(), bg_blue);
-    lineDivider('=');
+    lineDivider('*');
 
     displayTable(headers, products, allocator, false);
 
     margin(); 
-    cout << setw(WIDTH) << left << "|   Press (b): Back to previous page" << "|\n";
+    cout << setw(WIDTH) << left << "|   Enter (b): Back to previous page" << "|\n";
     lineDivider('='); 
     cout << '\n';
     margin(); 
@@ -883,24 +797,10 @@ void productPage(string filepath) {
 void paymentPage() {
     char option;
 
-    /*  
-    ======================================
-                Payment Page              
-    ======================================
-
-       Choose payment method:
-         1. Credit Card
-         2. Online Banking
-       
-    ======================================
-    
-       Enter your choice:
-    */
-
     cout << '\n';
-    lineDivider('=');
+    lineDivider('*');
     printCenter("Payment Page", bg_blue);
-    lineDivider('=');
+    lineDivider('*');
     margin(); 
     cout << setw(WIDTH) << left << "|" << "|\n";
     margin(); 
@@ -911,7 +811,7 @@ void paymentPage() {
     cout << setw(WIDTH) << left << "|" << "|\n";
     lineDivider('-');
     margin(); 
-    cout << setw(WIDTH) << left << "|   Press (b): Back to main page" << "|\n";
+    cout << setw(WIDTH) << left << "|   Enter (b): Back to main page" << "|\n";
     lineDivider('='); 
     cout << '\n';
     margin(); 
@@ -937,28 +837,6 @@ void paymentPage() {
  *         The receipt is print after the user make payment.
  */
 void receiptPage() {
-    /* 
-    ======================================
-                  Receipt
-    ======================================
-                   TESCO
-               TEL: 043456789
-    --------------------------------------
-       Qty   Item                 Amount
-    --------------------------------------
-
-        3    Food one             20.20      
-        1    Food two              4.50
-
-    --------------------------------------
-       Total Amount:               24.60
-    --------------------------------------
-                THANK YOU!
-
-            11/2/2023 08:22 pm
-    ======================================
-    */
-
     char datetime1[50];
     string datetime2;
 
@@ -979,9 +857,9 @@ void receiptPage() {
     string headers[] = {"Qty", "Item", "Amount"};
 
     cout << '\n';
-    lineDivider('=');
+    lineDivider('*');
     printCenter("Receipt", bg_blue);
-    lineDivider('=');
+    lineDivider('*');
     printCenter("Tesco", bg_default, true);
     printCenter("TEL: 043456789", bg_default, true);
     lineDivider('-');
