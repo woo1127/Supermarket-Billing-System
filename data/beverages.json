@@ -1,0 +1,23 @@
+{
+    "category": "Beverages",
+    "products": [
+        {
+            "id": 1,
+            "name": "Milo Activ-Go",
+            "quantity": 120,
+            "price": 8.19
+        },
+        {
+            "id": 2,
+            "name": "Nescafe 3 in 1 Coffee",
+            "quantity": 594,
+            "price": 10.99
+        },
+        {
+            "id": 3,
+            "name": "Hai-O Ginseng",
+            "quantity": 225,
+            "price": 18.99
+        }
+    ]
+}

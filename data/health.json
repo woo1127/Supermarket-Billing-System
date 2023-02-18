@@ -1,0 +1,23 @@
+{
+    "category": "Health & Beauty",
+    "products": [
+        {
+            "id": 1,
+            "name": "Sunsilk Shampoo",
+            "quantity": 47,
+            "price": 12.50
+        },
+        {
+            "id": 2,
+            "name": "Lux Bar Soap",
+            "quantity": 38,
+            "price": 4.90
+        },
+        {
+            "id": 3,
+            "name": "Eversoft Cleanser",
+            "quantity": 33,
+            "price": 15.99
+        }
+    ]
+}

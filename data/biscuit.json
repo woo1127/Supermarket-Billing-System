@@ -1,0 +1,23 @@
+{
+    "category": "Cookies & Biscuit",
+    "products": [
+        {
+            "id": 1,
+            "name": "Danisa Butter Cookies",
+            "quantity": 120,
+            "price": 19.55
+        },
+        {
+            "id": 2,
+            "name": "Munchy's Oakrunch",
+            "quantity": 215,
+            "price": 9.95
+        },
+        {
+            "id": 3,
+            "name": "Julie's Butter Cracker",
+            "quantity": 326,
+            "price": 4.20
+        }
+    ]
+}

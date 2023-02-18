@@ -24,7 +24,7 @@
 
 #define CART_FILE_PATH "data/cart.json"
 #define CREDENTIALS_FILE_PATH "data/credentials.csv"
-#define WIDTH 62
+#define WIDTH 70
 
 using namespace std;
 using namespace rapidjson;
@@ -158,7 +158,7 @@ void displayTable(string (&headers)[N], Value & data, Document::AllocatorType & 
     // key value pair of header names with its 
     // space used inside a column of table
     tableMap["No."] = 3;
-    tableMap["Item"] = 20;
+    tableMap["Item"] = 30;
     tableMap["Qty"] = 4;
     tableMap["Price"] = 6;
     tableMap["Amount"] = 6;
@@ -186,7 +186,7 @@ void displayTable(string (&headers)[N], Value & data, Document::AllocatorType & 
 
         cout << string(averageSpace, ' ') << setw(tableMap[headers[i]]);
 
-        if (space == 3 || space == 20)
+        if (space == 3 || space == 30)
             cout << left << headers[i];
         else if (space == 4 || space == 6)
             cout << right << headers[i];
@@ -216,7 +216,7 @@ void displayTable(string (&headers)[N], Value & data, Document::AllocatorType & 
                 case 3:
                     cout << left << p[header].GetInt();
                     break;
-                case 20:
+                case 30:
                     cout << left << p[header].GetString();
                     break;
                 case 4:
@@ -253,7 +253,7 @@ void displayTable(string (&headers)[N], Value & data, Document::AllocatorType & 
  *         so it will not stick on the left side of console
  */
 void margin() {
-    cout << string(30, ' ');
+    cout << string(25, ' ');
 }
 
 /**
@@ -470,18 +470,18 @@ void menuPage() {
     margin(); 
     cout << setw(WIDTH) << left << "|" << "|\n";
     margin(); 
-    cout << setw(WIDTH) << left << "|   Categories:"      << "|\n";
+    cout << setw(WIDTH) << left << "|   Categories:"            << "|\n";
     margin(); 
-    cout << setw(WIDTH) << left << "|     1. Canned Food" << "|\n";
+    cout << setw(WIDTH) << left << "|     1. Biscuit & Cookies" << "|\n";
     margin(); 
-    cout << setw(WIDTH) << left << "|     2. Vegetables"  << "|\n";
+    cout << setw(WIDTH) << left << "|     2. Beverages"         << "|\n";
     margin(); 
-    cout << setw(WIDTH) << left << "|     3. Fruits"      << "|\n";
+    cout << setw(WIDTH) << left << "|     3. Health & Beauty"   << "|\n";
     margin(); 
     cout << setw(WIDTH) << left << "|" << "|\n";
     lineDivider('-');
     margin(); 
-    cout << setw(WIDTH) << left << "|   Enter (b): Back to previos page" << "|\n";
+    cout << setw(WIDTH) << left << "|   Enter (b): Back to previous page" << "|\n";
     margin(); 
     cout << setw(WIDTH) << left << "|   Enter (p): Proceed to checkout"  << "|\n";
     lineDivider('='); 
@@ -494,13 +494,13 @@ void menuPage() {
 
     switch (option) {
         case '1': 
-            productPage("data/canned_food.json"); 
+            productPage("data/biscuit.json"); 
             break;
         case '2': 
-            productPage("data/vegetables.json"); 
+            productPage("data/beverages.json"); 
             break;
         case '3': 
-            productPage("data/fruits.json"); 
+            productPage("data/health.json"); 
             break;
         case 'b': 
             mainPage(); 
