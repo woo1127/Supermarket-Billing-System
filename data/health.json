@@ -4,19 +4,19 @@
         {
             "id": 1,
             "name": "Sunsilk Shampoo",
-            "quantity": 47,
-            "price": 12.50
+            "quantity": 45,
+            "price": 12.5
         },
         {
             "id": 2,
             "name": "Lux Bar Soap",
-            "quantity": 38,
-            "price": 4.90
+            "quantity": 35,
+            "price": 4.9
         },
         {
             "id": 3,
             "name": "Eversoft Cleanser",
-            "quantity": 33,
+            "quantity": 29,
             "price": 15.99
         }
     ]

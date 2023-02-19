@@ -4,7 +4,7 @@
         {
             "id": 1,
             "name": "Danisa Butter Cookies",
-            "quantity": 120,
+            "quantity": 118,
             "price": 19.55
         },
         {
@@ -17,7 +17,7 @@
             "id": 3,
             "name": "Julie's Butter Cracker",
             "quantity": 326,
-            "price": 4.20
+            "price": 4.2
         }
     ]
 }

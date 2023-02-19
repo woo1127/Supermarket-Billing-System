@@ -362,8 +362,8 @@ void loginPage() {
 }
 
 void signupPage() {
-    int numOfLine = 0;
-    string line;
+    int numOfLine = 1;
+    string line, word;
     string newUserid;
     char newUsername[13];
     char newPassword[9];
@@ -386,11 +386,22 @@ void signupPage() {
 
     fstream file(CREDENTIALS_FILE_PATH, ios::in);
 
-    // get the number of line in the credentials txt file
-    // as the new id for new user
     if (file.is_open()) {
+        getline(file, line);
+
         while (getline(file, line)) {
-            numOfLine++;
+            stringstream str(line);
+
+            while (getline(str, word, ',')) {
+                if (newUsername == word) {
+                    system("cls||clear");
+                    printCenter("Username already exist", bg_red);
+                    signupPage();
+                }    
+            }
+            // get the number of line in the credentials txt file
+            // as the new id for new user
+            numOfLine++; 
         }
         file.close();
     }
